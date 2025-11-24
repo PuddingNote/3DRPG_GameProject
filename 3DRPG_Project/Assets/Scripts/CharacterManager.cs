@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Cinemachine;
 
 [RequireComponent(typeof(CharacterController))]
-public class CharacterManager : MonoBehaviour
+public class CharacterManager : LivingEntity
 {
     [Header("이동 설정")]
     [Tooltip("캐릭터 이동 속도")]
@@ -63,14 +63,21 @@ public class CharacterManager : MonoBehaviour
     [Tooltip("PlayerFollowCamera의 cm")]
     [SerializeField] private Cinemachine3rdPersonFollow thirdPersonFollow;  // Cinemachine 3rd Person Follow 컴포넌트 참조 (카메라 거리 제어용)
 
-    private void Awake()
+    // FSM 관련
+    private IState currentState;
+
+    protected override void Awake()
     {
+        base.Awake(); // LivingEntity의 Awake (체력 초기화) 실행
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
     }
 
     private void Start()
     {
+        // 초기 상태 설정
+        ChangeState(new PlayerIdleState(this));
+
         // Cinemachine 타겟 초기 각도 초기화
         cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
@@ -101,10 +108,19 @@ public class CharacterManager : MonoBehaviour
 
     private void Update()
     {
-        CharacterMove();
+        // 현재 상태의 로직 실행
+        currentState?.Execute();
     }
 
-    private void CharacterMove()
+    // 상태 변경 함수
+    public void ChangeState(IState newState)
+    {
+        currentState?.Exit();
+        currentState = newState;
+        currentState.Enter();
+    }
+
+    public void CharacterMove()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
@@ -129,7 +145,7 @@ public class CharacterManager : MonoBehaviour
     }
 
     // 애니메이션 처리 함수
-    private void UpdateAnimation(bool isMove)
+    public void UpdateAnimation(bool isMove)
     {
         if (animator == null) 
         {

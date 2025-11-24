@@ -593,9 +593,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 907859197}
     m_Modifications:
+    - target: {fileID: 1200141113916174, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1597089859172454, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1618599820094292, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1732197075402576, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
       propertyPath: m_Name
@@ -604,6 +612,10 @@ PrefabInstance:
     - target: {fileID: 1856886262888914, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1861204135466084, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4203293618853656, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
       propertyPath: m_RootOrder
@@ -666,6 +678,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 65517523268857688, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 205268288034324406, guid: 5b069dd93b3c7ad468d92f6f8344bcc2, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
@@ -1528,6 +1544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22e5d622fda406a4a9f22f8c76a38302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHp: 100
+  currentHp: 0
   moveSpeed: 8
   rotationSpeed: 5
   cinemachineCameraTarget: {fileID: 1131257920}
@@ -2002,6 +2020,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22e5d622fda406a4a9f22f8c76a38302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHp: 100
+  currentHp: 0
   moveSpeed: 8
   rotationSpeed: 5
   cinemachineCameraTarget: {fileID: 1038998379}
