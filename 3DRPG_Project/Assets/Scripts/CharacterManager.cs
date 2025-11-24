@@ -8,7 +8,11 @@ public class CharacterManager : MonoBehaviour
     [Tooltip("캐릭터 이동 속도")]
     public float moveSpeed = 8f;
 
+    [Tooltip("캐릭터 회전 속도")]
+    public float rotationSpeed = 5f;
+
     private CharacterController characterController;
+    private Animator animator;
 
     [Header("카메라 설정")]
     [Tooltip("카메라 타겟 오브젝트")]
@@ -35,13 +39,13 @@ public class CharacterManager : MonoBehaviour
     public CinemachineVirtualCamera virtualCamera;  // PlayerFollowCamera 참조
 
     [Tooltip("마우스 휠 줌 속도")]
-    public float ZoomSpeed = 7f;
+    public float ZoomSpeed = 15f;
 
     [Tooltip("카메라 최소 거리")]
-    public float MinCameraDistance = 4f;
+    public float MinCameraDistance = 5f;
 
     [Tooltip("카메라 최대 거리")]
-    public float MaxCameraDistance = 15f;
+    public float MaxCameraDistance = 20f;
 
     [Tooltip("카메라 기본 거리")]
     public float DefaultCameraDistance = 9f;
@@ -62,6 +66,7 @@ public class CharacterManager : MonoBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
     }
 
     private void Start()
@@ -101,15 +106,38 @@ public class CharacterManager : MonoBehaviour
 
     private void CharacterMove()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
-        Vector3 inputDirection = new Vector3(horizontal, 0f, vertical);
+        Vector3 inputDirection = new Vector3(horizontal, 0f, vertical).normalized;
         inputDirection = Vector3.ClampMagnitude(inputDirection, 1f);
 
         Vector3 moveDirection = GetCameraRelativeDirection(inputDirection);
 
+        // 이동 방향이 있을 때만 캐릭터 회전
+        if (moveDirection.sqrMagnitude > threshold)
+        {
+            // 이동 방향으로 부드럽게 회전
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        }
+
         characterController.SimpleMove(moveDirection * moveSpeed);
+
+        // 애니메이션 업데이트 (입력 크기가 임계값보다 크면 이동 중으로 판단)
+        UpdateAnimation(inputDirection.magnitude > threshold);
+    }
+
+    // 애니메이션 처리 함수
+    private void UpdateAnimation(bool isMove)
+    {
+        if (animator == null) 
+        {
+            return;
+        }
+
+        // isMove 파라미터 설정
+        animator.SetBool("isMove", isMove);
     }
 
     // 카메라 기준 이동 방향 계산 함수 (카메라 회전에 따라 이동 방향이 조정되도록)
@@ -141,6 +169,12 @@ public class CharacterManager : MonoBehaviour
     {
         CameraRotation();
         CameraZoom();
+        
+        // 카메라 타겟의 회전을 항상 cinemachineTargetYaw와 cinemachineTargetPitch로 강제 설정 (캐릭터 회전에 영향을 받지 않도록)
+        if (cinemachineCameraTarget != null)
+        {
+            cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch, cinemachineTargetYaw, 0.0f);
+        }
     }
 
     // 카메라 회전 함수
