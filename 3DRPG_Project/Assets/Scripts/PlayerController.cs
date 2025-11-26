@@ -2,17 +2,37 @@ using UnityEngine;
 using Unity.Cinemachine;
 
 [RequireComponent(typeof(CharacterController))]
-public class CharacterManager : LivingEntity
+public class PlayerController : LivingEntity
 {
     [Header("이동 설정")]
     [Tooltip("캐릭터 이동 속도")]
-    public float moveSpeed = 8f;
+    public float moveSpeed = 5f;
 
     [Tooltip("캐릭터 회전 속도")]
     public float rotationSpeed = 5f;
 
     private CharacterController characterController;
-    private Animator animator;
+    public Animator animator;
+
+    [Header("전투 설정")]
+    [Tooltip("현재 타겟")]
+    public LivingEntity target;
+
+    [Tooltip("공격 사거리 (원거리)")]
+    public float attackRange = 10f;
+
+    [Tooltip("공격 쿨타임")]
+    public float attackCooldown = 1f;
+
+    [Tooltip("마지막 공격 시간")]
+    public float lastAttackCooldown;
+    
+    [Header("공격 설정")]
+    [Tooltip("파이어볼 프리팹")]
+    public GameObject fireballPrefab;
+
+    [Tooltip("발사 위치 (지팡이 끝)")]
+    public Transform firePoint;
 
     [Header("카메라 설정")]
     [Tooltip("카메라 타겟 오브젝트")]
@@ -108,8 +128,87 @@ public class CharacterManager : LivingEntity
 
     private void Update()
     {
+        // 마우스 클릭 처리 (타겟팅만)
+        if (Input.GetMouseButtonDown(0))
+        {
+            HandleTargetingInput();
+        }
+
+        // 스페이스바 입력 (공격 시도)
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            TryAttack();
+        }
+
         // 현재 상태의 로직 실행
         currentState?.Execute();
+    }
+
+    private void TryAttack()
+    {
+        // 타겟팅 체크
+        if (target == null || target.IsDead)
+        {
+            Debug.Log("타겟이 없습니다.");
+            return;
+        }
+
+        // 쿨타임 체크
+        if (Time.time - lastAttackCooldown < attackCooldown)
+        {
+            Debug.Log("공격 쿨타임 중입니다.");
+            return;
+        }
+
+        // 거리 체크
+        float distance = Vector3.Distance(transform.position, target.transform.position);
+        
+        if (distance <= attackRange)
+        {
+            // 사거리 내: 즉시 공격
+            ChangeState(new PlayerAttackState(this));
+        }
+        else
+        {
+            // 사거리 밖: 추적 시작
+            ChangeState(new PlayerChaseState(this));
+        }
+    }
+
+    // 외부(State)에서 특정 방향으로 이동시키기 위한 함수
+    public void Move(Vector3 direction)
+    {
+        characterController.SimpleMove(direction * moveSpeed);
+    }
+
+    private void HandleTargetingInput()
+    {
+        // 마우스 위치로 레이 발사
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            // 1. 태그 확인: "Monster" 태그인지 먼저 체크
+            if (hit.collider.CompareTag("Monster"))
+            {
+                // 2. LivingEntity 컴포넌트 가져오기
+                LivingEntity entity = hit.collider.GetComponent<LivingEntity>();
+                
+                // 살아있는 엔티티라면 타겟으로 설정
+                if (entity != null && !entity.IsDead)
+                {
+                    target = entity;
+                    Debug.Log($"타겟 선택: {target.name}");
+                }
+            }
+            else
+            {
+                // 몬스터가 아닌 곳(빈 땅 등)을 클릭하면 타겟 해제
+                target = null;
+                Debug.Log("타겟 해제");
+            }
+        }
     }
 
     // 상태 변경 함수

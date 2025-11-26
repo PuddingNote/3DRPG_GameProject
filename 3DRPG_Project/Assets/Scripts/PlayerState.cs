@@ -1,8 +1,8 @@
 public abstract class PlayerState : IState
 {
-    protected CharacterManager player;
+    protected PlayerController player;
 
-    public PlayerState(CharacterManager player)
+    public PlayerState(PlayerController player)
     {
         this.player = player;
     }

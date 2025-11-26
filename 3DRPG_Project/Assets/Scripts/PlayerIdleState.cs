@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerIdleState : PlayerState
 {
-    public PlayerIdleState(CharacterManager player) : base(player) { }
+    public PlayerIdleState(PlayerController player) : base(player) { }
 
     public override void Enter()
     {
