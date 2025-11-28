@@ -6,7 +6,7 @@ public class PlayerIdleState : PlayerState
 
     public override void Enter()
     {
-        // 대기 상태 진입 시 애니메이션 멈춤 처리 (안전장치)
+        // 대기 상태 진입 시 애니메이션 멈춤 처리
         player.UpdateAnimation(false);
     }
 
@@ -25,6 +25,6 @@ public class PlayerIdleState : PlayerState
 
     public override void Exit()
     {
-        // 대기 상태 탈출
+        
     }
 }

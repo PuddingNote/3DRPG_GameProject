@@ -6,7 +6,7 @@ public class PlayerMoveState : PlayerState
 
     public override void Enter()
     {
-        // 이동 상태 진입
+        
     }
 
     public override void Execute()

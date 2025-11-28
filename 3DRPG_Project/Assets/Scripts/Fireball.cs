@@ -71,8 +71,11 @@ public class Fireball : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // 1. 플레이어 자신과의 충돌 무시
-        if (other.CompareTag("Player")) return;
-
+        if (other.CompareTag("Player")) 
+        {
+            return;
+        }
+        
         // 2. 타겟 지정 공격인 경우, 타겟이 아니면 무시 (관통)
         if (target != null && other.transform != target && other.transform.root != target)
         {

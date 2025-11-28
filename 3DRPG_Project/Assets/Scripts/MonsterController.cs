@@ -3,17 +3,22 @@ using UnityEngine.AI;
 
 public class MonsterController : LivingEntity
 {
+    [Header("Combat Settings")]
+    public float attackCooldown = 1.5f;     // 공격 쿨타임
+    public float lastAttackTime = 0f;       // 마지막 공격 시간
+
     [Header("AI Settings")]
     public float detectionRange = 10f;      // 탐색 범위
     public float attackRange = 2f;          // 공격 범위
     public float moveSpeed = 5.5f;          // 이동 속도
-    public float returnDistance = 20f;      // 복귀 거리 (스폰 위치로부터)
+    public float returnDistance = 30f;      // 복귀 거리 (너무 멀리 가면 강제 복귀용)
 
     [Header("Target")]
     public LivingEntity target;             // 현재 타겟 (플레이어)
     
-    // 시작 위치 저장 (복귀용)
+    // 시작 위치/회전 저장 (복귀용)
     public Vector3 SpawnPosition { get; private set; }
+    public Quaternion SpawnRotation { get; private set; }
     
     // 컴포넌트 참조
     public NavMeshAgent navMeshAgent;
@@ -28,6 +33,7 @@ public class MonsterController : LivingEntity
         navMeshAgent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         SpawnPosition = transform.position;
+        SpawnRotation = transform.rotation;
     }
 
     private void Start()
@@ -36,7 +42,8 @@ public class MonsterController : LivingEntity
         if (navMeshAgent != null)
         {
             navMeshAgent.speed = moveSpeed;
-            navMeshAgent.stoppingDistance = attackRange;
+            navMeshAgent.stoppingDistance = 0f;
+            navMeshAgent.autoBraking = true;
         }
 
         // 초기 상태: Idle
@@ -45,6 +52,11 @@ public class MonsterController : LivingEntity
 
     private void Update()
     {
+        if (IsDead) 
+        {
+            return;
+        }
+
         currentState?.Execute();
     }
 
@@ -57,19 +69,31 @@ public class MonsterController : LivingEntity
 
     public override void Die()
     {
-        base.Die(); // LivingEntity의 Die 실행 (IsDead 설정 및 이벤트 호출)
+        base.Die(); 
         
-        // 나중에는 쓰러지는 애니메이션 재생 후 일정 시간 뒤에 파괴하도록 수정 예정
-        // 지금은 즉시 오브젝트 파괴
-        Destroy(gameObject);
+        if (animator != null)
+        {
+            animator.SetTrigger("Die");
+        }
+
+        if (navMeshAgent != null)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.enabled = false;
+        }
+        
+        Collider collider = GetComponent<Collider>();
+        if (collider != null) 
+        {
+            collider.enabled = false;
+        }
+
+        Destroy(gameObject, 3f);
     }
 
-    // 플레이어 탐색 함수 (가장 가까운 플레이어 찾기)
     public LivingEntity FindPlayer()
     {
-        // 범위 내 Player 태그를 가진 오브젝트들을 찾음
         Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange);
-        
         foreach (var collider in colliders)
         {
             if (collider.CompareTag("Player"))
@@ -80,7 +104,31 @@ public class MonsterController : LivingEntity
         return null;
     }
 
-    // 디버그용 범위 표시
+    // 플레이어가 "NavMesh 끝부분 + 공격 사거리" 내에 있는가? 판단
+    public bool IsTargetReachable(LivingEntity targetEntity)
+    {
+        if (targetEntity == null || navMeshAgent == null)
+        {
+            return false;
+        }
+
+        // 몬스터의 현재 위치에서 타겟까지의 경로 계산
+        NavMeshPath path = new NavMeshPath();
+        if (navMeshAgent.CalculatePath(targetEntity.transform.position, path))
+        {
+            // 경로의 끝점 (갈 수 있는 한계점)
+            Vector3 finalPoint = path.corners[path.corners.Length - 1];
+            
+            // 끝점과 타겟의 거리
+            float distanceToEnd = Vector3.Distance(finalPoint, targetEntity.transform.position);
+
+            // 그 거리가 공격 사거리 이내라면 "닿는다"고 판단 (오차 고려하여 -0.1f)
+            return distanceToEnd <= attackRange - 0.1f;
+        }
+        
+        return false;
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
