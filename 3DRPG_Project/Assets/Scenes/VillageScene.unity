@@ -3525,7 +3525,7 @@ MonoBehaviour:
   rotationSpeed: 5
   animator: {fileID: 0}
   target: {fileID: 0}
-  attackRange: 10
+  attackRange: 20
   attackCooldown: 1
   lastAttackCooldown: 0
   fireballPrefab: {fileID: 378097938803567579, guid: 613d840e98cb6504c870532992b1302a, type: 3}
