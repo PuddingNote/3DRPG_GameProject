@@ -93,6 +93,20 @@ public class GameManager : MonoBehaviour
 
             currentVirtualCamera.Follow = pivot;
             currentVirtualCamera.LookAt = pivot;
+
+            // 플레이어 컨트롤러에 가상 카메라 및 ThirdPersonFollow 할당
+            PlayerController playerController = currentPlayer.GetComponent<PlayerController>();
+            if (playerController != null)
+            {
+                playerController.virtualCamera = currentVirtualCamera;
+                
+                // 줌 기능을 위해 ThirdPersonFollow 컴포넌트 연결
+                var cm3rdPerson = currentVirtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+                if (cm3rdPerson != null)
+                {
+                    playerController.thirdPersonFollow = cm3rdPerson;
+                }
+            }
         }
     }
 
@@ -101,4 +115,3 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }
-

@@ -1620,6 +1620,10 @@ MonoBehaviour:
   rotationSpeed: 5
   animator: {fileID: 0}
   target: {fileID: 0}
+  interactionTransform: {fileID: 0}
+  clickLayerMask:
+    serializedVersion: 2
+    m_Bits: 192
   attackRange: 20
   attackCooldown: 1
   lastAttackCooldown: 0

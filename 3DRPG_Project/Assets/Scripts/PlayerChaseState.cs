@@ -21,29 +21,60 @@ public class PlayerChaseState : PlayerState
             return;
         }
 
-        if (player.target == null || player.target.IsDead)
+        // 추적할 타겟 결정 (몬스터 vs 상호작용 대상)
+        Transform chaseTarget = null;
+        float stopDistance = 0f;
+        bool isAttackTarget = false;
+
+        if (player.target != null && !player.target.IsDead)
         {
+            chaseTarget = player.target.transform;
+            stopDistance = player.attackRange;
+            isAttackTarget = true;
+        }
+        else if (player.interactionTarget != null && player.interactionTransform != null)
+        {
+            chaseTarget = player.interactionTransform;
+            stopDistance = 2.5f; // 상호작용 사거리
+            isAttackTarget = false;
+        }
+        else
+        {
+            // 타겟이 없으면 Idle로 복귀
             player.ChangeState(new PlayerIdleState(player));
             return;
         }
 
         // 거리 계산
-        float distance = Vector3.Distance(player.transform.position, player.target.transform.position);
+        float distance = Vector3.Distance(player.transform.position, chaseTarget.position);
 
-        // 사거리 도달 시 공격
-        if (distance <= player.attackRange)
+        // 사거리 도달 시 행동
+        if (distance <= stopDistance)
         {        
-            player.ChangeState(new PlayerAttackState(player));
+            if (isAttackTarget)
+            {
+                player.ChangeState(new PlayerAttackState(player));
+            }
+            else
+            {
+                // 상호작용 실행
+                player.interactionTarget.Interact();
+                
+                // 상호작용 후 타겟 해제 및 Idle 전환
+                player.interactionTarget = null;
+                player.interactionTransform = null;
+                player.ChangeState(new PlayerIdleState(player));
+            }
             return; 
         }
 
-        // 이동 로직 (CharacterMove와 유사하지만 타겟 방향으로)
-        MoveToTarget();
+        // 이동 로직
+        MoveToTarget(chaseTarget);
     }
 
-    private void MoveToTarget()
+    private void MoveToTarget(Transform target)
     {
-        Vector3 direction = (player.target.transform.position - player.transform.position).normalized;
+        Vector3 direction = (target.position - player.transform.position).normalized;
         direction.y = 0;
 
         // 회전

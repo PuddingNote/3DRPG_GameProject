@@ -14,9 +14,16 @@ public class PlayerController : LivingEntity
     private CharacterController characterController;
     public Animator animator;
 
-    [Header("전투 설정")]
-    [Tooltip("현재 타겟")]
+    [Header("전투 및 상호작용 설정")]
+    [Tooltip("현재 타겟 (몬스터)")]
     public LivingEntity target;
+
+    [Tooltip("현재 상호작용 타겟 (포탈, NPC 등)")]
+    public IInteractable interactionTarget; // 인터페이스 타겟 추가
+    public Transform interactionTransform;  // 상호작용 대상의 위치 정보
+
+    [Tooltip("클릭 가능한 레이어 (Monster, Interactable 등)")]
+    public LayerMask clickLayerMask; // [변경] 레이어 마스크 추가
 
     [Tooltip("공격 사거리 (원거리)")]
     public float attackRange = 10f;
@@ -81,7 +88,7 @@ public class PlayerController : LivingEntity
     private float targetCameraDistance;     // 마우스 휠 입력으로 설정되는 목표값
     
     [Tooltip("PlayerFollowCamera의 cm")]
-    [SerializeField] private Cinemachine3rdPersonFollow thirdPersonFollow;  // Cinemachine 3rd Person Follow 컴포넌트 참조 (카메라 거리 제어용)
+    public Cinemachine3rdPersonFollow thirdPersonFollow;  // Cinemachine 3rd Person Follow 컴포넌트 참조 (카메라 거리 제어용)
 
     // FSM 관련
     private IState currentState;
@@ -134,44 +141,61 @@ public class PlayerController : LivingEntity
             HandleTargetingInput();
         }
 
-        // 스페이스바 입력 (공격 시도)
+        // 스페이스바 입력 (공격 또는 상호작용 시도)
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            TryAttack();
+            TryAction();
         }
 
         // 현재 상태의 로직 실행
         currentState?.Execute();
     }
 
-    private void TryAttack()
+    private void TryAction()
     {
-        // 타겟팅 체크
-        if (target == null || target.IsDead)
+        // 1. 몬스터 타겟이 있는 경우
+        if (target != null && !target.IsDead)
         {
-            Debug.Log("타겟이 없습니다.");
-            return;
-        }
+            // 쿨타임 체크
+            if (Time.time - lastAttackCooldown < attackCooldown)
+            {
+                Debug.Log("공격 쿨타임 중입니다.");
+                return;
+            }
 
-        // 쿨타임 체크
-        if (Time.time - lastAttackCooldown < attackCooldown)
-        {
-            Debug.Log("공격 쿨타임 중입니다.");
-            return;
+            float distance = Vector3.Distance(transform.position, target.transform.position);
+            
+            if (distance <= attackRange)
+            {
+                ChangeState(new PlayerAttackState(this));
+            }
+            else
+            {
+                ChangeState(new PlayerChaseState(this));
+            }
         }
-
-        // 거리 체크
-        float distance = Vector3.Distance(transform.position, target.transform.position);
-        
-        if (distance <= attackRange)
+        // 2. 상호작용 타겟이 있는 경우 (포탈 등)
+        else if (interactionTarget != null && interactionTransform != null)
         {
-            // 사거리 내: 즉시 공격
-            ChangeState(new PlayerAttackState(this));
+             float distance = Vector3.Distance(transform.position, interactionTransform.position);
+             
+             // 상호작용 사거리 (일단 2.0f로 고정)
+             if (distance <= 2.0f)
+             {
+                 interactionTarget.Interact(); // 즉시 상호작용
+                 // 상호작용 완료 후 타겟 해제
+                 interactionTarget = null; 
+                 interactionTransform = null;
+             }
+             else
+             {
+                 // 거리가 멀면 걸어감 (ChaseState 재활용)
+                 ChangeState(new PlayerChaseState(this));
+             }
         }
         else
         {
-            // 사거리 밖: 추적 시작
-            ChangeState(new PlayerChaseState(this));
+            Debug.Log("타겟이 없습니다.");
         }
     }
 
@@ -187,27 +211,35 @@ public class PlayerController : LivingEntity
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit))
+        // 레이어 마스크를 사용하여 지정된 레이어(Monster, Interaction)만 검사
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, clickLayerMask))
         {
-            // 1. 태그 확인: "Monster" 태그인지 먼저 체크
-            if (hit.collider.CompareTag("Monster"))
+            // 초기화
+            target = null;
+            interactionTarget = null;
+            interactionTransform = null;
+
+            // 1. 몬스터 (LivingEntity) 확인
+            LivingEntity entity = hit.collider.GetComponent<LivingEntity>();
+            if (entity != null && !entity.IsDead)
             {
-                // 2. LivingEntity 컴포넌트 가져오기
-                LivingEntity entity = hit.collider.GetComponent<LivingEntity>();
-                
-                // 살아있는 엔티티라면 타겟으로 설정
-                if (entity != null && !entity.IsDead)
-                {
-                    target = entity;
-                    Debug.Log($"타겟 선택: {target.name}");
-                }
+                target = entity;
+                Debug.Log($"타겟 선택: {target.name}");
+                return;
             }
-            else
+
+            // 2. 상호작용 대상 (IInteractable) 확인 - 태그 확인 없이 인터페이스 유무로 판단
+            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+            if (interactable != null)
             {
-                // 몬스터가 아닌 곳(빈 땅 등)을 클릭하면 타겟 해제
-                target = null;
-                Debug.Log("타겟 해제");
+                interactionTarget = interactable;
+                interactionTransform = hit.transform;
+                Debug.Log($"상호작용 타겟 선택: {hit.collider.name}");
+                return;
             }
+
+            // 아무것도 아니면 타겟 해제
+            Debug.Log("타겟 해제");
         }
     }
 
