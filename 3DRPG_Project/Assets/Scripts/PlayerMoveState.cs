@@ -11,6 +11,13 @@ public class PlayerMoveState : PlayerState
 
     public override void Execute()
     {
+        // 문 상호작용 중이면 잠시 정지
+        if (player.isDoorInteracting)
+        {
+            player.UpdateAnimation(false);
+            return;
+        }
+
         // 실제 이동 로직 수행
         player.CharacterMove();
 

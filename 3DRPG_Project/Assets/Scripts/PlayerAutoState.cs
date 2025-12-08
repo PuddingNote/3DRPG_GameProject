@@ -45,6 +45,13 @@ public class PlayerAutoState : PlayerState
             return;
         }
 
+        // 문 상호작용 중이면 잠시 정지
+        if (player.isDoorInteracting)
+        {
+            player.UpdateAnimation(false);
+            return;
+        }
+
         // 3. 현재 방 정보 갱신
         currentRoom = player.currentRoom;
 
@@ -138,19 +145,14 @@ public class PlayerAutoState : PlayerState
         {
             // DungeonDoor의 InteractionPosition을 사용하여 거리 계산 및 이동
             Vector3 doorPos = currentRoom.roomDoor.InteractionPosition;
-            // Debug.Log($"문 이동 목표: {doorPos} (InteractionPoint: {currentRoom.roomDoor.interactionPoint?.name})");
 
             float distToDoor = Vector3.Distance(player.transform.position, doorPos);
             
-            // 상호작용 사거리 (넉넉하게 3m)
-            if (distToDoor <= 3.0f)
+            // 상호작용 사거리
+            if (distToDoor <= player.interactionRange)
             {
-                // 문 열기 시도
-                currentRoom.roomDoor.Interact();
-                if (player.agent != null) 
-                {
-                    player.agent.ResetPath(); // 잠시 멈춤
-                }
+                // 문 앞에 도달했으면 공통 코루틴으로 1초간 대기 후 진행
+                player.DoorInteractWithDelay(currentRoom.roomDoor);
             }
             else
             {

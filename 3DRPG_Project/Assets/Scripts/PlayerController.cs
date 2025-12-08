@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.AI;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : LivingEntity
@@ -28,6 +29,9 @@ public class PlayerController : LivingEntity
 
     [Tooltip("공격 사거리 (원거리)")]
     public float attackRange = 10f;
+
+    [Tooltip("상호작용 사거리")]
+    public float interactionRange = 2.0f;
 
     [Tooltip("공격 쿨타임")]
     public float attackCooldown = 1f;
@@ -98,6 +102,10 @@ public class PlayerController : LivingEntity
     public bool isAutoMode = false;
     public NavMeshAgent agent;
     public DungeonRoomManager currentRoom;
+
+    [Header("상호작용 상태")]
+    [Tooltip("문 상호작용으로 잠시 멈춰있는 중인지 여부")]
+    public bool isDoorInteracting = false;
 
     // 중력 처리를 위한 변수
     private Vector3 verticalVelocity;
@@ -230,14 +238,23 @@ public class PlayerController : LivingEntity
         {
              float distance = Vector3.Distance(transform.position, interactionTransform.position);
              
-             // 상호작용 사거리 (일단 2.0f로 고정)
-             if (distance <= 2.0f)
+             // 상호작용 사거리
+             if (distance <= interactionRange)
              {
-                 interactionTarget.Interact(); // 즉시 상호작용
+                 // 상호작용 대상이 문인 경우: 공통 코루틴으로 1초간 대기 후 진행
+                 if (interactionTarget is DungeonDoor door)
+                 {
+                     DoorInteractWithDelay(door);
+                 }
+                 else
+                 {
+                     // 일반 상호작용은 즉시 실행
+                     interactionTarget.Interact();
 
-                 // 상호작용 완료 후 타겟 해제
-                 interactionTarget = null; 
-                 interactionTransform = null;
+                     // 상호작용 완료 후 타겟 해제
+                     interactionTarget = null; 
+                     interactionTransform = null;
+                 }
              }
              else
              {
@@ -301,6 +318,74 @@ public class PlayerController : LivingEntity
         currentState?.Exit();
         currentState = newState;
         currentState.Enter();
+    }
+
+    // 문 상호작용 시 1초간 문 앞에서 대기하는 공통 로직 (자동/수동 공용)
+    public void DoorInteractWithDelay(DungeonDoor door)
+    {
+        if (door == null) 
+        {
+            return;
+        }
+        if (isDoorInteracting) 
+        {
+            return;
+        }
+
+        StartCoroutine(DoorInteractRoutine(door));
+    }
+
+    private IEnumerator DoorInteractRoutine(DungeonDoor door)
+    {
+        isDoorInteracting = true;
+
+        // 이동 멈추기
+        if (isAutoMode && agent != null && agent.isActiveAndEnabled)
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+        }
+        else
+        {
+            // 수동 모드에서는 Idle 상태로 전환하여 이동을 멈춤
+            ChangeState(new PlayerIdleState(this));
+        }
+
+        // Idle 애니메이션
+        UpdateAnimation(false);
+
+        // 문 방향 바라보기
+        if (door != null)
+        {
+            Vector3 dir = (door.InteractionPosition - transform.position).normalized;
+            dir.y = 0;
+            if (dir != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(dir);
+            }
+
+            // 문 열기 상호작용
+            door.Interact();
+        }
+
+        // 1초간 문 앞에서 대기
+        yield return new WaitForSeconds(1f);
+
+        // 상호작용 정보 정리
+        interactionTarget = null;
+        interactionTransform = null;
+
+        isDoorInteracting = false;
+
+        // 상태 복구: 자동 모드면 AutoState, 아니면 Idle
+        if (isAutoMode)
+        {
+            ChangeState(new PlayerAutoState(this));
+        }
+        else
+        {
+            ChangeState(new PlayerIdleState(this));
+        }
     }
 
     public void CharacterMove()

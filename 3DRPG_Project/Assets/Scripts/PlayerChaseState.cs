@@ -11,6 +11,13 @@ public class PlayerChaseState : PlayerState
 
     public override void Execute()
     {
+        // 문 상호작용 중이면 잠시 정지
+        if (player.isDoorInteracting)
+        {
+            player.UpdateAnimation(false);
+            return;
+        }
+
         // 이동 입력 감지 (WASD) -> 입력이 있으면 추적 중단하고 이동 상태로 전환
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
@@ -44,7 +51,7 @@ public class PlayerChaseState : PlayerState
                 targetPosition = player.interactionTransform.position;
             }
             
-            stopDistance = 2.5f; // 상호작용 사거리
+            stopDistance = player.interactionRange; // 상호작용 사거리
             isAttackTarget = false;
         }
         else
@@ -66,13 +73,21 @@ public class PlayerChaseState : PlayerState
             }
             else
             {
-                // 상호작용 실행
-                player.interactionTarget.Interact();
-                
-                // 상호작용 후 타겟 해제 및 Idle 전환
-                player.interactionTarget = null;
-                player.interactionTransform = null;
-                player.ChangeState(new PlayerIdleState(player));
+                // 상호작용 대상이 문이라면, 공통 코루틴으로 1초간 대기 후 진행
+                if (player.interactionTarget is DungeonDoor door)
+                {
+                    player.DoorInteractWithDelay(door);
+                }
+                else
+                {
+                    // 일반 상호작용 (즉시 실행)
+                    player.interactionTarget.Interact();
+                    
+                    // 상호작용 후 타겟 해제 및 Idle 전환
+                    player.interactionTarget = null;
+                    player.interactionTransform = null;
+                    player.ChangeState(new PlayerIdleState(player));
+                }
             }
             return; 
         }
