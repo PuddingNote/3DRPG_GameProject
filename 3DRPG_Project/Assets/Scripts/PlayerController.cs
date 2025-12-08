@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.AI;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : LivingEntity
@@ -23,7 +24,7 @@ public class PlayerController : LivingEntity
     public Transform interactionTransform;  // 상호작용 대상의 위치 정보
 
     [Tooltip("클릭 가능한 레이어 (Monster, Interactable 등)")]
-    public LayerMask clickLayerMask; // [변경] 레이어 마스크 추가
+    public LayerMask clickLayerMask;        // 레이어 마스크 추가
 
     [Tooltip("공격 사거리 (원거리)")]
     public float attackRange = 10f;
@@ -93,11 +94,27 @@ public class PlayerController : LivingEntity
     // FSM 관련
     private IState currentState;
 
+    [Header("자동 전투 설정")]
+    public bool isAutoMode = false;
+    public NavMeshAgent agent;
+    public DungeonRoomManager currentRoom;
+
+    // 중력 처리를 위한 변수
+    private Vector3 verticalVelocity;
+    private float gravityValue = -9.81f;
+
     protected override void Awake()
     {
         base.Awake(); // LivingEntity의 Awake (체력 초기화) 실행
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+
+        // NavMeshAgent 가져오기
+        agent = GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.enabled = false; // 기본 비활성화
+        }
     }
 
     private void Start()
@@ -135,6 +152,12 @@ public class PlayerController : LivingEntity
 
     private void Update()
     {
+        // 자동 모드 토글 (T키) (지금이야 T키인데 나중에는 UI 버튼을 눌렀을때로 변경할 예정)
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            ToggleAutoMode();
+        }
+
         // 마우스 클릭 처리 (타겟팅만)
         if (Input.GetMouseButtonDown(0))
         {
@@ -151,6 +174,34 @@ public class PlayerController : LivingEntity
         currentState?.Execute();
     }
 
+    public void ToggleAutoMode()
+    {
+        isAutoMode = !isAutoMode;
+        Debug.Log($"Auto Mode: {isAutoMode}");
+
+        if (isAutoMode)
+        {
+            // 자동 모드 켜짐: NavMeshAgent 활성화, CharacterController 비활성화 (충돌 방지)
+            characterController.enabled = false;
+            if (agent != null)
+            {
+                agent.enabled = true;
+                agent.ResetPath();
+            }
+        }
+        else
+        {
+            // 자동 모드 꺼짐: CharacterController 활성화, NavMeshAgent 비활성화
+            if (agent != null)
+            {
+                agent.enabled = false;
+            }
+            characterController.enabled = true;
+            
+            ChangeState(new PlayerIdleState(this));     // 수동 모드로 돌아오면 Idle 상태로 강제 전환하여 AutoState 탈출
+        }
+    }
+
     private void TryAction()
     {
         // 1. 몬스터 타겟이 있는 경우
@@ -159,7 +210,7 @@ public class PlayerController : LivingEntity
             // 쿨타임 체크
             if (Time.time - lastAttackCooldown < attackCooldown)
             {
-                Debug.Log("공격 쿨타임 중입니다.");
+                //Debug.Log("공격 쿨타임 중입니다.");
                 return;
             }
 
@@ -183,19 +234,20 @@ public class PlayerController : LivingEntity
              if (distance <= 2.0f)
              {
                  interactionTarget.Interact(); // 즉시 상호작용
+
                  // 상호작용 완료 후 타겟 해제
                  interactionTarget = null; 
                  interactionTransform = null;
              }
              else
              {
-                 // 거리가 멀면 걸어감 (ChaseState 재활용)
+                 // 거리가 멀면 걸어감
                  ChangeState(new PlayerChaseState(this));
              }
         }
         else
         {
-            Debug.Log("타겟이 없습니다.");
+            //Debug.Log("타겟이 없습니다.");
         }
     }
 
@@ -224,22 +276,22 @@ public class PlayerController : LivingEntity
             if (entity != null && !entity.IsDead)
             {
                 target = entity;
-                Debug.Log($"타겟 선택: {target.name}");
+                //Debug.Log($"타겟 선택: {target.name}");
                 return;
             }
 
-            // 2. 상호작용 대상 (IInteractable) 확인 - 태그 확인 없이 인터페이스 유무로 판단
+            // 2. 상호작용 대상 (IInteractable) 확인
             IInteractable interactable = hit.collider.GetComponent<IInteractable>();
             if (interactable != null)
             {
                 interactionTarget = interactable;
                 interactionTransform = hit.transform;
-                Debug.Log($"상호작용 타겟 선택: {hit.collider.name}");
+                //Debug.Log($"상호작용 타겟 선택: {hit.collider.name}");
                 return;
             }
 
             // 아무것도 아니면 타겟 해제
-            Debug.Log("타겟 해제");
+            //Debug.Log("타겟 해제");
         }
     }
 
@@ -256,22 +308,33 @@ public class PlayerController : LivingEntity
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
+        // 1. 바닥 체크 및 중력 초기화 (Snap to Ground)
+        if (characterController.isGrounded && verticalVelocity.y < 0)
+        {
+            // 0이 아니라 약간의 음수 값을 주어 바닥에 밀착시킴 (계단 내려갈 때 뜸 방지)
+            verticalVelocity.y = -5f; 
+        }
+
         Vector3 inputDirection = new Vector3(horizontal, 0f, vertical).normalized;
         inputDirection = Vector3.ClampMagnitude(inputDirection, 1f);
 
         Vector3 moveDirection = GetCameraRelativeDirection(inputDirection);
 
-        // 이동 방향이 있을 때만 캐릭터 회전
+        // 2. 회전 처리
         if (moveDirection.sqrMagnitude > threshold)
         {
-            // 이동 방향으로 부드럽게 회전
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
 
-        characterController.SimpleMove(moveDirection * moveSpeed);
+        // 3. 이동 처리 (수평 이동) - SimpleMove 대신 Move 사용
+        characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
 
-        // 애니메이션 업데이트 (입력 크기가 임계값보다 크면 이동 중으로 판단)
+        // 4. 중력 적용 (수직 이동)
+        verticalVelocity.y += gravityValue * Time.deltaTime;
+        characterController.Move(verticalVelocity * Time.deltaTime);
+
+        // 애니메이션 업데이트
         UpdateAnimation(inputDirection.magnitude > threshold);
     }
 
@@ -283,7 +346,6 @@ public class PlayerController : LivingEntity
             return;
         }
 
-        // isMove 파라미터 설정
         animator.SetBool("isMove", isMove);
     }
 

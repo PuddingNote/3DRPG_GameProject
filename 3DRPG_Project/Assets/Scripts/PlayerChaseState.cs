@@ -22,19 +22,28 @@ public class PlayerChaseState : PlayerState
         }
 
         // 추적할 타겟 결정 (몬스터 vs 상호작용 대상)
-        Transform chaseTarget = null;
+        Vector3 targetPosition = Vector3.zero; // 목표 위치
         float stopDistance = 0f;
         bool isAttackTarget = false;
 
         if (player.target != null && !player.target.IsDead)
         {
-            chaseTarget = player.target.transform;
+            targetPosition = player.target.transform.position;
             stopDistance = player.attackRange;
             isAttackTarget = true;
         }
         else if (player.interactionTarget != null && player.interactionTransform != null)
         {
-            chaseTarget = player.interactionTransform;
+            // DungeonDoor인 경우 InteractionPosition 사용
+            if (player.interactionTarget is DungeonDoor door)
+            {
+                targetPosition = door.InteractionPosition;
+            }
+            else
+            {
+                targetPosition = player.interactionTransform.position;
+            }
+            
             stopDistance = 2.5f; // 상호작용 사거리
             isAttackTarget = false;
         }
@@ -46,7 +55,7 @@ public class PlayerChaseState : PlayerState
         }
 
         // 거리 계산
-        float distance = Vector3.Distance(player.transform.position, chaseTarget.position);
+        float distance = Vector3.Distance(player.transform.position, targetPosition);
 
         // 사거리 도달 시 행동
         if (distance <= stopDistance)
@@ -69,12 +78,12 @@ public class PlayerChaseState : PlayerState
         }
 
         // 이동 로직
-        MoveToTarget(chaseTarget);
+        MoveToTarget(targetPosition);
     }
 
-    private void MoveToTarget(Transform target)
+    private void MoveToTarget(Vector3 targetPos)
     {
-        Vector3 direction = (target.position - player.transform.position).normalized;
+        Vector3 direction = (targetPos - player.transform.position).normalized;
         direction.y = 0;
 
         // 회전

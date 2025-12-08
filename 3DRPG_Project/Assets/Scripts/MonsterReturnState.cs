@@ -33,6 +33,13 @@ public class MonsterReturnState : MonsterState
         LivingEntity target = monster.FindPlayer();
         if (target != null)
         {
+            // 발견했더라도, 그 플레이어가 내 구역(returnDistance) 밖이라면 무시하고 계속 복귀
+            float distFromSpawn = Vector3.Distance(target.transform.position, monster.SpawnPosition);
+            if (distFromSpawn > monster.returnDistance)
+            {
+                return;
+            }
+
             // 발견했다면 "때릴 수 있는 위치인가?" 체크
             if (monster.IsTargetReachable(target))
             {
@@ -48,6 +55,7 @@ public class MonsterReturnState : MonsterState
         {
             monster.navMeshAgent.ResetPath();
         }
+        
         if (monster.animator != null)
         {
             monster.animator.SetBool("isMove", false);

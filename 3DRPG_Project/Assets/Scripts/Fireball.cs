@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class Fireball : MonoBehaviour
 {
-    public float speed = 15f;
-    public int damage = 10;
-    public Transform target; // 유도 기능용
-    public float homingSensitivity = 5f; // 유도 성능 (회전 속도)
+    public float speed = 15f;   // 투사체 속도
+    public int damage = 10;     // 투사체 데미지
+    public Transform target;    // 유도 기능용
+    public float homingSensitivity = 5f;    // 유도 성능 (회전 속도)
 
     private Vector3 direction;
 

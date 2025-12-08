@@ -31,7 +31,7 @@ public abstract class LivingEntity : MonoBehaviour, IDamageable
         }
 
         currentHp -= damage;
-        Debug.Log($"{name}이 {damage} 데미지 입음. 남은 체력: {currentHp}");
+        //Debug.Log($"{name}이 {damage} 데미지 입음. 남은 체력: {currentHp}");
 
         if (currentHp <= 0)
         {
@@ -48,6 +48,6 @@ public abstract class LivingEntity : MonoBehaviour, IDamageable
 
         IsDead = true;
         OnDeath?.Invoke();
-        Debug.Log($"{name} 사망");
+        //Debug.Log($"{name} 사망");
     }
 }

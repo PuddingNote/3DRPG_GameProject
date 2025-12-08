@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class MonsterAttackState : MonsterState
 {
-    private float stateDuration = 0f;
-    private float attackAnimDuration = 1.0f; // 공격 애니메이션 길이 (실제 공격 애니메이션은 0.8초임)
+    private float stateDuration = 0f;           // 상태 지속 시간
+    private float attackAnimDuration = 1.0f;    // 공격 애니메이션 길이 (실제 공격 애니메이션은 0.8초임)
 
     public MonsterAttackState(MonsterController monster) : base(monster) { }
 
@@ -48,7 +48,7 @@ public class MonsterAttackState : MonsterState
             monster.animator.SetTrigger("Attack");
         }
         
-        Debug.Log("몬스터가 플레이어 어택");
+        //Debug.Log("몬스터가 플레이어 어택");
 
         // 데미지 처리
         if (monster.target != null)

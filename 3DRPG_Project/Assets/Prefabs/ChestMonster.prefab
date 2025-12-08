@@ -845,7 +845,7 @@ MonoBehaviour:
   lastAttackTime: 0
   detectionRange: 10
   attackRange: 2
-  moveSpeed: 5.5
+  moveSpeed: 6
   returnDistance: 20
   target: {fileID: 0}
   navMeshAgent: {fileID: 0}

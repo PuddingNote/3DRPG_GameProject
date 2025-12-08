@@ -59,10 +59,6 @@ public class MonsterIdleState : MonsterState
             // B. 사거리 밖인가?
             else
             {
-                // 이미 타겟을 잡고 있는 상태라면,
-                // NavMesh 밖으로 나갔더라도(IsTargetReachable == false),
-                // 일단 Chase 상태로 전환하여 "갈 수 있는 데까지" 추격하도록 함.
-                // (ChaseState에서 NavMesh 끝에 도달했을 때 최종적으로 포기 여부를 결정)
                 monster.ChangeState(new MonsterChaseState(monster));
                 return;
             }
