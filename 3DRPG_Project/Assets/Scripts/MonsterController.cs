@@ -129,6 +129,21 @@ public class MonsterController : LivingEntity
         return false;
     }
 
+    // 애니메이션 이벤트에서 호출할 실제 공격 함수
+    public void OnAttackHit()
+    {
+        if (target != null && !target.IsDead)
+        {
+            // 사거리 체크 한 번 더 (공격 중에 도망갔을 수도 있으니)
+            float distance = Vector3.Distance(transform.position, target.transform.position);
+            if (distance <= attackRange) // 약간의 여유 범위 (+ 0.5f 줬다가 일단 지움)
+            {
+                target.TakeDamage(5);
+                Debug.Log($"{name}이 {target.name}에게 데미지를 줌");
+            }
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

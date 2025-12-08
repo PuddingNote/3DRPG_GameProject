@@ -48,14 +48,6 @@ public class MonsterAttackState : MonsterState
             monster.animator.SetTrigger("Attack");
         }
         
-        //Debug.Log("몬스터가 플레이어 어택");
-
-        // 데미지 처리
-        if (monster.target != null)
-        {
-            monster.target.TakeDamage(5); 
-        }
-
         // 마지막 공격 시간 기록 (MonsterController에 저장)
         monster.lastAttackTime = Time.time;
     }
