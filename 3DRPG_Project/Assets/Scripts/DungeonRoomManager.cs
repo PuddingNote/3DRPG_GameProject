@@ -115,7 +115,7 @@ public class DungeonRoomManager : MonoBehaviour
                 //Debug.Log("던전 클리어! 마을로 이동합니다.");
                 if (!string.IsNullOrEmpty(nextSceneName))
                 {
-                    SceneManager.LoadScene(nextSceneName);
+                    LoadingSceneController.LoadScene(nextSceneName);
                 }
             }
         }

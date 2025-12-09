@@ -26,7 +26,7 @@ public class Portal : MonoBehaviour, IInteractable
                 GameManager.Instance.SavePreviousSceneName(SceneManager.GetActiveScene().name);
             }
 
-            SceneManager.LoadScene(sceneName);
+            LoadingSceneController.LoadScene(sceneName);
         }
         else
         {
