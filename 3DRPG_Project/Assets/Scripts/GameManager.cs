@@ -99,6 +99,16 @@ public class GameManager : MonoBehaviour
 
         // 5. 카메라 타겟 재연결
         SetupCameraTargets();
+
+        // 6. 카메라 시점 리셋 (플레이어 뒤쪽 보기)
+        if (currentPlayer != null)
+        {
+            PlayerController pc = currentPlayer.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.ResetCameraRotation();
+            }
+        }
     }
 
     // 플레이어 위치 강제 이동

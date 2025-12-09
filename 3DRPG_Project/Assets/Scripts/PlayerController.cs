@@ -537,4 +537,17 @@ public class PlayerController : LivingEntity
         // 보간된 값을 Cinemachine에 적용
         thirdPersonFollow.CameraDistance = currentCameraDistance;
     }
+
+    // 카메라 회전 리셋 (플레이어 뒤쪽 보기)
+    public void ResetCameraRotation()
+    {
+        if (cinemachineCameraTarget != null)
+        {
+            // 플레이어의 현재 회전값(Y)을 가져와서 카메라 Yaw에 적용
+            cinemachineTargetYaw = transform.eulerAngles.y;
+            cinemachineTargetPitch = 0f; // 기본 상하 각도
+
+            cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch, cinemachineTargetYaw, 0f);
+        }
+    }
 }
