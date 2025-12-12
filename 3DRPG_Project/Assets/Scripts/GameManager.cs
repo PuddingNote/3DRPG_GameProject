@@ -1,11 +1,17 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Cinemachine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+
+    [Header("Scene Transition")]
+    public RectTransform transitionPanel;   // 화면 가림막 패널
+    public float transitionDuration = 0.5f; // 애니메이션 시간
 
     [Header("Prefabs")]
     public GameObject playerPrefab;         // 플레이어 원본
@@ -107,7 +113,71 @@ public class GameManager : MonoBehaviour
             if (pc != null)
             {
                 pc.ResetCameraRotation();
+                
+                // 7. 씬 진입 직후 1초간 입력 잠금 (이동 방지)
+                pc.LockInput(1.0f);
             }
+        }
+
+        // 8. 씬 전환 효과 (커튼 걷기: 중앙 -> 위)
+        if (scene.name != "LoadingScene")
+        {
+            StartCoroutine(AnimatePanel(Vector2.zero, new Vector2(0, Screen.height)));
+        }
+        else
+        {
+            // 로딩 씬 진입 시에는 화면을 가린 상태 유지
+            if (transitionPanel != null)
+            {
+                transitionPanel.gameObject.SetActive(true);
+                transitionPanel.anchoredPosition = Vector2.zero;
+            }
+        }
+    }
+
+    // 외부 호출용: 연출과 함께 씬 이동
+    public void LoadSceneWithTransition(string sceneName)
+    {
+        StartCoroutine(TransitionProcess(sceneName));
+    }
+
+    // 씬 이동 연출 처리
+    private IEnumerator TransitionProcess(string sceneName)
+    {
+        // 1. 커튼 올리기 (아래 -> 중앙)
+        yield return StartCoroutine(AnimatePanel(new Vector2(0, -Screen.height), Vector2.zero));
+
+        // 2. 실제 로딩 시작
+        LoadingSceneController.LoadSceneDirectly(sceneName);
+    }
+
+    // 커튼 애니메이션 처리
+    private IEnumerator AnimatePanel(Vector2 startPos, Vector2 endPos)
+    {
+        if (transitionPanel == null) 
+        {
+            yield break;
+        }
+
+        transitionPanel.gameObject.SetActive(true);
+        float timer = 0f;
+        
+        while (timer < transitionDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / transitionDuration;
+            t = t * t * (3f - 2f * t); // SmoothStep
+            
+            transitionPanel.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            yield return null;
+        }
+
+        transitionPanel.anchoredPosition = endPos;
+        
+        // 화면을 다 걷어냈으면(위로 올라갔으면) 비활성화
+        if (endPos.y > 0)
+        {
+             transitionPanel.gameObject.SetActive(false);
         }
     }
 

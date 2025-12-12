@@ -1,36 +1,37 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Portal : MonoBehaviour, IInteractable
 {
-    [Tooltip("이동할 씬의 이름 입력")]
-    public string sceneName;
+    [Header("Settings")]
+    public DungeonData dungeonData;     // 연결할 던전 데이터
+    public DungeonEntranceUI dungeonUI; // 씬에 있는 UI 참조
 
     public void Interact()
     {
-        //Debug.Log($"[Portal] {sceneName}으로 이동합니다.");
-        
-        // 씬 이동 실행
-        if (!string.IsNullOrEmpty(sceneName))
+        // 플레이어 멈추기 (Idle 전환)
+        if (GameManager.Instance.currentPlayer != null)
         {
-            // 던전으로 가는 거라면(DungeonScene), 현재 위치(마을)를 저장
-            if (sceneName == "DungeonScene" && GameManager.Instance != null)
+            PlayerController pc = GameManager.Instance.currentPlayer.GetComponent<PlayerController>();
+            if (pc != null)
             {
-                // GameManager가 알고 있는 플레이어 위치 사용
-                if (GameManager.Instance.currentPlayer != null)
+                // 강제로 Idle 상태로 전환 및 이동 정지
+                pc.ChangeState(new PlayerIdleState(pc));
+                
+                // NavMeshAgent가 유효한 상태일 때만 경로 초기화
+                if (pc.agent != null && pc.agent.isActiveAndEnabled && pc.agent.isOnNavMesh)
                 {
-                    GameManager.Instance.SaveTownPosition(GameManager.Instance.currentPlayer.transform.position);
+                    pc.agent.ResetPath();
                 }
                 
-                // 현재 씬 이름을 '이전 씬'으로 저장 (던전 클리어 후 복귀용)
-                GameManager.Instance.SavePreviousSceneName(SceneManager.GetActiveScene().name);
+                // UI 조작을 위해 플레이어 입력 잠금
+                pc.SetInputLock(true);
             }
-
-            LoadingSceneController.LoadScene(sceneName);
         }
-        else
+
+        // UI 띄우기
+        if (dungeonUI != null && dungeonData != null)
         {
-            //Debug.LogWarning("이동할 씬 이름이 설정되지 않았습니다.");
+            dungeonUI.OpenUI(dungeonData);
         }
     }
 }

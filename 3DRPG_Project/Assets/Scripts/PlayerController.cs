@@ -111,6 +111,9 @@ public class PlayerController : LivingEntity
     private Vector3 verticalVelocity;
     private float gravityValue = -9.81f;
 
+    // 입력 잠금 상태 (UI 열림 등)
+    public bool IsInputLocked { get; private set; } = false;
+
     protected override void Awake()
     {
         base.Awake(); // LivingEntity의 Awake (체력 초기화) 실행
@@ -160,6 +163,12 @@ public class PlayerController : LivingEntity
 
     private void Update()
     {
+        // 입력 잠금 상태면 업데이트 중지
+        if (IsInputLocked) 
+        {
+            return;
+        }
+
         // 자동 모드 토글 (T키) (지금이야 T키인데 나중에는 UI 버튼을 눌렀을때로 변경할 예정)
         if (Input.GetKeyDown(KeyCode.T))
         {
@@ -549,5 +558,36 @@ public class PlayerController : LivingEntity
 
             cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch, cinemachineTargetYaw, 0f);
         }
+    }
+
+    // 영구 잠금/해제 설정 (UI 등에서 사용)
+    public void SetInputLock(bool isLocked)
+    {
+        IsInputLocked = isLocked;
+        if (isLocked)
+        {
+            if (animator != null) 
+            {
+                animator.SetBool("isMove", false);
+            }
+            if (agent != null && agent.isActiveAndEnabled) 
+            {
+                agent.ResetPath();
+            }
+        }
+    }
+
+    // 시간 제한 잠금 (씬 이동 직후 등)
+    public void LockInput(float duration)
+    {
+        StartCoroutine(LockInputRoutine(duration));
+    }
+
+    // 시간 제한 잠금 코루틴
+    private IEnumerator LockInputRoutine(float duration)
+    {
+        SetInputLock(true);
+        yield return new WaitForSeconds(duration);
+        SetInputLock(false);
     }
 }

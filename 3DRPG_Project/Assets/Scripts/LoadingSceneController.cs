@@ -7,7 +7,6 @@ public class LoadingSceneController : MonoBehaviour
 {
     [Header("UI Components")]
     [SerializeField] private Image loadingCircle; // Filled Type Image
-    // [SerializeField] private Text loadingText; // 필요시 사용
 
     private static string nextSceneName;
 
@@ -15,6 +14,20 @@ public class LoadingSceneController : MonoBehaviour
     private const float MIN_LOADING_TIME = 3.0f; // 최소 로딩 시간 (3초)
 
     public static void LoadScene(string sceneName)
+    {
+        // GameManager가 있고 패널이 설정되어 있다면 연출 사용
+        if (GameManager.Instance != null && GameManager.Instance.transitionPanel != null)
+        {
+            GameManager.Instance.LoadSceneWithTransition(sceneName);
+        }
+        else
+        {
+            LoadSceneDirectly(sceneName);
+        }
+    }
+
+    // GameManager에서 호출하는 실제 로딩 시작 함수
+    public static void LoadSceneDirectly(string sceneName)
     {
         nextSceneName = sceneName;
         SceneManager.LoadScene("LoadingScene");
@@ -25,6 +38,7 @@ public class LoadingSceneController : MonoBehaviour
         StartCoroutine(LoadSceneProcess());
     }
 
+    // 씬 로딩 처리
     private IEnumerator LoadSceneProcess()
     {
         AsyncOperation op = SceneManager.LoadSceneAsync(nextSceneName);
