@@ -94,6 +94,16 @@ public class GameManager : MonoBehaviour
             GameObject mainCam = Instantiate(mainCameraPrefab);
             DontDestroyOnLoad(mainCam);
         }
+        
+        // 시네머신 브레인이 꺼져있다면 복구 
+        if (Camera.main != null)
+        {
+            CinemachineBrain brain = Camera.main.GetComponent<CinemachineBrain>();
+            if (brain != null && !brain.enabled)
+            {
+                brain.enabled = true;
+            }
+        }
 
         // 4. 가상 카메라 처리
         if (currentVirtualCamera == null)

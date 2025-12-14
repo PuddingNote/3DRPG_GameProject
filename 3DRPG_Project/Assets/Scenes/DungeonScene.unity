@@ -15140,6 +15140,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Door
       objectReference: {fileID: 0}
+    - target: {fileID: 2709548738030362469, guid: 1c92c75fbc9b1aa488fc45ddc74566db, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3373636562101732831, guid: 1c92c75fbc9b1aa488fc45ddc74566db, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2
@@ -34845,8 +34849,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomDoor: {fileID: 1488332280}
   monsterPrefab: {fileID: 7200122057412035158, guid: c1c6d40df222d404faaf058c37db9956, type: 3}
-  spawnPoints:
-  - {fileID: 147352167}
+  spawnPoints: []
   nextWaypoint: {fileID: 1253578534}
   isLastRoom: 0
   nextSceneName: 
@@ -37955,6 +37958,10 @@ PrefabInstance:
     - target: {fileID: 2709548738030362469, guid: 1c92c75fbc9b1aa488fc45ddc74566db, type: 3}
       propertyPath: m_Name
       value: Door
+      objectReference: {fileID: 0}
+    - target: {fileID: 2709548738030362469, guid: 1c92c75fbc9b1aa488fc45ddc74566db, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3373636562101732831, guid: 1c92c75fbc9b1aa488fc45ddc74566db, type: 3}
       propertyPath: m_LocalPosition.x

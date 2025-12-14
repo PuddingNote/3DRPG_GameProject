@@ -59,6 +59,7 @@ public class PlayerAutoState : PlayerState
         DecideNextAction();
     }
 
+    // 수동 조작 개입 확인
     private bool CheckManualInput()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
@@ -71,6 +72,7 @@ public class PlayerAutoState : PlayerState
         return false;
     }
 
+    // 행동 결정
     private void DecideNextAction()
     {
         // 방 정보가 없으면 할 게 없음 (대기)

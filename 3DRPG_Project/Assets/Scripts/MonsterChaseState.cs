@@ -24,8 +24,7 @@ public class MonsterChaseState : MonsterState
         // 2. 거리 계산
         float distanceToTarget = Vector3.Distance(monster.transform.position, monster.target.transform.position);
         
-        // 3. 공격 사거리 진입 체크
-        // (이동 중이라도 공격 가능하면 즉시 공격)
+        // 3. 공격 사거리 진입 체크 (이동 중이라도 공격 가능하면 즉시 공격)
         if (distanceToTarget <= monster.attackRange)
         {
             monster.ChangeState(new MonsterAttackState(monster));

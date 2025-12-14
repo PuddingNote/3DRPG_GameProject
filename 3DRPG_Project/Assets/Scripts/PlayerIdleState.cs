@@ -12,7 +12,7 @@ public class PlayerIdleState : PlayerState
 
     public override void Execute()
     {
-        // [추가] 자동 모드 활성화 시 AutoState로 전환
+        // 자동 모드 활성화 시 AutoState로 전환
         if (player.isAutoMode)
         {
             player.ChangeState(new PlayerAutoState(player));

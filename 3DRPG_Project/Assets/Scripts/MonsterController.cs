@@ -139,7 +139,7 @@ public class MonsterController : LivingEntity
             if (distance <= attackRange) // 약간의 여유 범위 (+ 0.5f 줬다가 일단 지움)
             {
                 target.TakeDamage(5);
-                Debug.Log($"{name}이 {target.name}에게 데미지를 줌");
+                //Debug.Log($"{name}이 {target.name}에게 데미지를 줌");
             }
         }
     }

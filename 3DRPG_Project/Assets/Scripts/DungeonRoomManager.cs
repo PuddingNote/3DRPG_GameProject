@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
 
 public class DungeonRoomManager : MonoBehaviour
 {
@@ -17,6 +19,8 @@ public class DungeonRoomManager : MonoBehaviour
     [Header("Status")]
     public List<LivingEntity> liveMonsters = new List<LivingEntity>();  // 생성된 몬스터들 리스트
     public bool isCleared = false;      // 방 클리어 여부
+    
+    private Transform lastDeadMonsterTransform; // 마지막으로 죽은 몬스터 위치
 
     // 플레이어 방 진입 시 호출
     private void OnTriggerEnter(Collider other)
@@ -27,7 +31,7 @@ public class DungeonRoomManager : MonoBehaviour
             if (player != null && player.currentRoom != this)   // 이미 현재 방으로 인식되어 있다면 중복 처리하지 않음
             {
                 player.currentRoom = this;
-                Debug.Log($"Entered Room: {gameObject.name}");
+                //Debug.Log($"Entered Room: {gameObject.name}");
             }
         }
     }
@@ -38,7 +42,7 @@ public class DungeonRoomManager : MonoBehaviour
         if (isLastRoom && GameManager.Instance != null && !string.IsNullOrEmpty(GameManager.Instance.previousSceneName))
         {
             nextSceneName = GameManager.Instance.previousSceneName;
-            Debug.Log($"[DungeonRoom] 복귀할 씬 설정됨: {nextSceneName}");
+            //Debug.Log($"[DungeonRoom] 복귀할 씬 설정됨: {nextSceneName}");
         }
 
         SpawnMonsters();
@@ -86,6 +90,7 @@ public class DungeonRoomManager : MonoBehaviour
         if (liveMonsters.Contains(monster))
         {
             liveMonsters.Remove(monster);
+            lastDeadMonsterTransform = monster.transform; // 위치 저장 (연출용)
         }
 
         CheckRoomClear();
@@ -109,15 +114,194 @@ public class DungeonRoomManager : MonoBehaviour
 
             //Debug.Log($"방 {gameObject.name} 클리어");
 
-            // [마지막 방 처리] 몬스터 전멸 시 즉시 씬 이동
+            // [마지막 방 처리] 몬스터 전멸 시 클리어 연출 시작
             if (isLastRoom)
             {
-                //Debug.Log("던전 클리어! 마을로 이동합니다.");
-                if (!string.IsNullOrEmpty(nextSceneName))
-                {
-                    LoadingSceneController.LoadScene(nextSceneName);
-                }
+                StartCoroutine(BossClearSequence());
             }
         }
+    }
+
+    // 마지막 방 클리어 시 호출 (연출)
+    private IEnumerator BossClearSequence()
+    {
+        // 0. 연출 시작 즉시 플레이어 조작 차단
+        if (GameManager.Instance.currentPlayer != null)
+        {
+            PlayerController player = GameManager.Instance.currentPlayer.GetComponent<PlayerController>();
+            if (player != null)
+            {
+                // 자동 모드 해제 및 Agent 정지
+                if (player.isAutoMode) 
+                {
+                    player.ToggleAutoMode();
+                }
+                player.isAutoMode = false;
+                
+                if (player.agent != null)
+                {
+                    if (player.agent.isActiveAndEnabled)
+                    {
+                        player.agent.isStopped = true;
+                        player.agent.ResetPath();
+                        player.agent.velocity = Vector3.zero;
+                    }
+                    player.agent.enabled = false;
+                }
+
+                // 입력 잠금 및 상태 전환
+                player.SetInputLock(true);
+                player.ChangeState(new PlayerIdleState(player));
+            }
+        }
+
+        // 1. 슬로우 모션 (1.5초간 0.2배속)
+        Time.timeScale = 0.2f;
+        yield return new WaitForSecondsRealtime(1.5f);
+        Time.timeScale = 1.0f;
+
+        // 2. 몬스터 줌인
+        Camera mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            CinemachineBrain brain = mainCam.GetComponent<CinemachineBrain>();
+            if (brain != null) 
+            {
+                brain.enabled = false;
+            }
+
+            if (lastDeadMonsterTransform != null)
+            {
+                Vector3 monsterPos = lastDeadMonsterTransform.position;
+                Vector3 currentCamPos = mainCam.transform.position;
+
+                // 1. 몬스터에서 카메라를 바라보는 방향 계산 (현재 앵글 유지)
+                Vector3 directionToCam = (currentCamPos - monsterPos).normalized;
+                
+                // 방향이 너무 위쪽이거나 이상하면 몬스터 정면 기준으로 잡음
+                if (directionToCam.y > 0.9f || directionToCam == Vector3.zero) 
+                {
+                    directionToCam = (lastDeadMonsterTransform.forward + Vector3.up).normalized;
+                }
+
+                // 2. 고정된 거리값 설정 (줌 레벨 무시)
+                float startDist = 7.0f;
+                float endDist = 4.0f;
+                float height = 3.0f;
+
+                Vector3 startPos = monsterPos + (directionToCam * startDist) + (Vector3.up * height);
+                Vector3 endPos = monsterPos + (directionToCam * endDist) + (Vector3.up * (height * 0.7f)); // 살짝 낮아지면서 줌인
+
+                // 3. 진입 연출: 현재 위치에서 시작 위치로 빠르게 이동
+                Vector3 initialCamPos = mainCam.transform.position;
+                Quaternion initialCamRot = mainCam.transform.rotation;
+                Quaternion targetLookRot = Quaternion.LookRotation(monsterPos + Vector3.up * 1.0f - startPos);
+
+                float entryDuration = 1.0f;
+                float entryTimer = 0f;
+
+                while (entryTimer < entryDuration)
+                {
+                    entryTimer += Time.deltaTime;
+                    float t = entryTimer / entryDuration;
+                    t = t * t * (3f - 2f * t);
+
+                    mainCam.transform.position = Vector3.Lerp(initialCamPos, startPos, t);
+                    mainCam.transform.rotation = Quaternion.Slerp(initialCamRot, targetLookRot, t);
+                    yield return null;
+                }
+
+                yield return new WaitForSeconds(1.5f);
+            }
+        }
+
+        // 3. 플레이어 카메라 연출
+        if (GameManager.Instance.currentPlayer != null)
+        {
+            PlayerController player = GameManager.Instance.currentPlayer.GetComponent<PlayerController>();
+            
+            if (player != null)
+            {
+                // 연출 좌표 계산 (플레이어 기준)
+                Transform pTr = player.transform;
+                Vector3 center = pTr.position + Vector3.up * 1.5f;
+
+                // 1. 시작: 왼쪽 45도 + 약간 아래
+                Vector3 leftOffset = (Quaternion.Euler(0, 45, 0) * pTr.forward) * 5.0f;
+                Vector3 startPos = center + leftOffset + (Vector3.down * 0.5f);
+
+                // 2. 중간: 오른쪽 45도 + 약간 위
+                Vector3 rightOffset = (Quaternion.Euler(0, -45, 0) * pTr.forward) * 5.0f;
+                Vector3 midPos = center + rightOffset + (Vector3.up * 1.5f);
+
+                // 3. 끝: 정면
+                Vector3 frontOffset = pTr.forward * 6.0f; 
+                Vector3 endPos = center + frontOffset + Vector3.up * 1.0f;
+
+                // 카메라 무빙 실행
+                yield return StartCoroutine(PlayerDynamicCamera(mainCam, pTr, startPos, midPos, endPos));
+            }
+        }
+
+        // 4. 3초 대기 후 마을로 이동
+        yield return new WaitForSeconds(3.0f);
+
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            LoadingSceneController.LoadScene(nextSceneName);
+        }
+    }
+
+    // 플레이어 주변을 도는 카메라 연출
+    private IEnumerator PlayerDynamicCamera(Camera cam, Transform target, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        if (cam == null) 
+        {
+            yield break;
+        }
+
+        // 1. 왼쪽에서 오른쪽으로 이동
+        cam.transform.position = p1;
+        cam.transform.LookAt(target.position + Vector3.up * 1.2f);
+        
+        float duration = 1.5f;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / duration;
+            t = t * t * (3f - 2f * t);
+
+            cam.transform.position = Vector3.Lerp(p1, p2, t);
+            cam.transform.LookAt(target.position + Vector3.up * 1.2f);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.2f);
+
+        // 2. 정면으로 이동
+        timer = 0f;
+        duration = 1.5f;
+        Vector3 startPos = cam.transform.position;
+        Quaternion startRot = cam.transform.rotation;
+        
+        // 최종 바라볼 각도 미리 계산
+        Vector3 lookTarget = target.position + Vector3.up * 1.0f;
+        Quaternion endRot = Quaternion.LookRotation(lookTarget - p3);
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / duration;
+            t = t * t * (3f - 2f * t);
+
+            cam.transform.position = Vector3.Lerp(startPos, p3, t);
+            cam.transform.rotation = Quaternion.Slerp(startRot, endRot, t);
+            yield return null;
+        }
+        
+        cam.transform.position = p3;
+        cam.transform.LookAt(lookTarget);
     }
 }

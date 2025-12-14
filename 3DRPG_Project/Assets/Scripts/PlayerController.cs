@@ -11,7 +11,7 @@ public class PlayerController : LivingEntity
     public float moveSpeed = 5f;
 
     [Tooltip("캐릭터 회전 속도")]
-    public float rotationSpeed = 5f;
+    public float rotationSpeed = 3.5f;
 
     private CharacterController characterController;
     public Animator animator;
@@ -194,7 +194,7 @@ public class PlayerController : LivingEntity
     public void ToggleAutoMode()
     {
         isAutoMode = !isAutoMode;
-        Debug.Log($"Auto Mode: {isAutoMode}");
+        //Debug.Log($"Auto Mode: {isAutoMode}");
 
         if (isAutoMode)
         {
