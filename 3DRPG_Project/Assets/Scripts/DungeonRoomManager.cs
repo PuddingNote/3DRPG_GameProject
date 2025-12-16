@@ -243,12 +243,20 @@ public class DungeonRoomManager : MonoBehaviour
             }
         }
 
-        // 4. 3초 대기 후 마을로 이동
-        yield return new WaitForSeconds(3.0f);
+        // 4. 1초 대기 후 결과 UI 출력
+        yield return new WaitForSeconds(1.0f);
 
         if (!string.IsNullOrEmpty(nextSceneName))
         {
-            LoadingSceneController.LoadScene(nextSceneName);
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.ShowDungeonResult(nextSceneName);
+            }
+            //else
+            //
+            //   // GameManager가 없으면 바로 이동 (비상용)
+            //   LoadingSceneController.LoadScene(nextSceneName);
+            //
         }
     }
 

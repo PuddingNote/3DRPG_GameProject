@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public GameObject playerPrefab;         // 플레이어 원본
     public GameObject mainCameraPrefab;     // 메인 카메라 원본
     public GameObject virtualCameraPrefab;  // 팔로우 카메라 원본
+    public GameObject dungeonResultUIPrefab; // 던전 결과 UI 프리팹
 
     [Header("Current Instances")]
     public GameObject currentPlayer;        // 현재 플레이어 오브젝트
@@ -143,6 +144,25 @@ public class GameManager : MonoBehaviour
                 transitionPanel.anchoredPosition = Vector2.zero;
             }
         }
+    }
+
+    // 던전 결과창 출력
+    public void ShowDungeonResult(string nextSceneName)
+    {
+        if (dungeonResultUIPrefab != null)
+        {
+            GameObject uiObj = Instantiate(dungeonResultUIPrefab);
+            DungeonResultUI resultUI = uiObj.GetComponent<DungeonResultUI>();
+            if (resultUI != null)
+            {
+                resultUI.Setup(nextSceneName);
+            }
+        }
+        //else
+        //{
+        //    Debug.Log("DungeonResultUI Prefab이 GameManager에 할당되지 않았습니다.");
+        //    LoadingSceneController.LoadScene(nextSceneName);
+        //}
     }
 
     // 외부 호출용: 연출과 함께 씬 이동
