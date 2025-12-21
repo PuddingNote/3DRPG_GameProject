@@ -37,6 +37,12 @@ public class DungeonEntranceUI : MonoBehaviour
         currentDungeonData = data;
         selectedStage = null;
         
+        // UI가 열릴 때 플레이어 입력 잠금
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetPlayerInputLocked(true);
+        }
+
         UpdateDungeonInfo();
         CreateStageButtons();
         
@@ -139,15 +145,10 @@ public class DungeonEntranceUI : MonoBehaviour
     {
         gameObject.SetActive(false);
         
-        // UI 닫을 때 플레이어 잠금 해제
-        if (GameManager.Instance != null && GameManager.Instance.currentPlayer != null)
+        // UI 닫을 때 플레이어 잠금 해제 (GameManager를 통해 범용적으로 처리)
+        if (GameManager.Instance != null)
         {
-            // PlayerController를 찾아서 잠금 해제
-            var pc = GameManager.Instance.currentPlayer.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                pc.SetInputLock(false);
-            }
+            GameManager.Instance.SetPlayerInputLocked(false);
         }
     }
 }

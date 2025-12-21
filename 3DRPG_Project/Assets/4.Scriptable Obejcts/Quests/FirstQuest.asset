@@ -18,4 +18,4 @@ MonoBehaviour:
   startDialogue: "\uCCAB\uBC88\uC9F8 \uD018\uC2A4\uD2B8 \uC2DC\uC791 \uC2DC \uB300\uC0AC"
   progressDialogue: "\uCCAB\uBC88\uC9F8 \uD018\uC2A4\uD2B8 \uC9C4\uD589 \uC911 \uB300\uC0AC"
   completeDialogue: "\uCCAB\uBC88\uC9F8 \uD018\uC2A4\uD2B8 \uC644\uB8CC \uC2DC \uB300\uC0AC"
-  nextQuest: {fileID: 0}
+  nextQuest: {fileID: 11400000, guid: b61abc7a9edc6b34aa3c59c456f37889, type: 2}

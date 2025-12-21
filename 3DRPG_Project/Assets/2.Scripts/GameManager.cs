@@ -321,6 +321,19 @@ public class GameManager : MonoBehaviour
             //Debug.Log($"플레이어 상태 초기화 완료: {pc.name}");
         }
     }
+    
+    // 범용 플레이어 입력 잠금 기능
+    public void SetPlayerInputLocked(bool isLocked)
+    {
+        if (currentPlayer != null)
+        {
+            PlayerController pc = currentPlayer.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.SetInputLock(isLocked);
+            }
+        }
+    }
 
     private void OnDestroy()
     {

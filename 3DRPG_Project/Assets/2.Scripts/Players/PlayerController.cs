@@ -566,14 +566,15 @@ public class PlayerController : LivingEntity
         IsInputLocked = isLocked;
         if (isLocked)
         {
-            if (animator != null) 
-            {
-                animator.SetBool("isMove", false);
-            }
-            if (agent != null && agent.isActiveAndEnabled) 
+            // 1. 네비게이션 에이전트 정지 (자동 모드일 때 안전하게 정지)
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 agent.ResetPath();
+                agent.velocity = Vector3.zero;
             }
+
+            // 2. 애니메이션 초기화 (Idle 상태로 전환)
+            UpdateAnimation(false);
         }
     }
 
