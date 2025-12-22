@@ -16,8 +16,8 @@ public class NPCController : MonoBehaviour, IInteractable
         // 1. 관련된 모든 퀘스트 가져오기 (시작 전, 진행 중, 완료 가능)
         List<Quest> availableQuests = GetAvailableQuests();
         
-        // 2. 대사 결정 (가장 우선순위 높은 퀘스트 하나를 기준으로 대사 출력)
-        string dialogue = GetProperDialogue(availableQuests);
+        // 2. 무조건 랜덤 대사(인사)부터 시작
+        string dialogue = GetRandomDialogue();
 
         // 3. UI 띄우기
         if (DialogueUI.Instance != null)
@@ -59,6 +59,7 @@ public class NPCController : MonoBehaviour, IInteractable
         return result;
     }
 
+    /*
     // 대사 우선순위 로직
     private string GetProperDialogue(List<Quest> quests)
     {
@@ -87,9 +88,9 @@ public class NPCController : MonoBehaviour, IInteractable
         {
             return quest.data.progressDialogue;
         }
-
         return GetRandomDialogue();
     }
+    */
 
     // 기본 대사 랜덤 반환
     public string GetRandomDialogue()
