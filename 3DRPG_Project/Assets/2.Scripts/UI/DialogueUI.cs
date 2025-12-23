@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 public class DialogueUI : MonoBehaviour
@@ -31,9 +32,17 @@ public class DialogueUI : MonoBehaviour
     [SerializeField] private Button acceptButton;       // 수락 버튼
     [SerializeField] private Button rejectButton;       // 거절 버튼
 
+    [Header("Settings")]
+    [SerializeField] private float typingSpeed = 0.05f; // 타이핑 속도
+
     private DialogueState currentState = DialogueState.None; 
     private List<Quest> currentQuests; 
     private int selectedQuestID = -1;   // 현재 선택된 퀘스트 ID
+
+    // 타이핑 효과 관련 변수
+    private bool isTyping = false;
+    private string fullText = "";
+    private Coroutine typingCoroutine;
 
     private void Awake()
     {
@@ -104,19 +113,23 @@ public class DialogueUI : MonoBehaviour
     {
         currentState = state;
 
-        // 텍스트 갱신 (내용이 있을 때만)
+        // 텍스트 갱신 (내용이 있을 때만 타이핑 시작)
         if (!string.IsNullOrEmpty(text) && dialogueText != null) 
         {
-            dialogueText.text = text;
+            // 이전 코루틴이 있다면 중지
+            if (typingCoroutine != null)
+            {
+                StopCoroutine(typingCoroutine);
+            }
+            
+            fullText = text;
+            typingCoroutine = StartCoroutine(TypeDialogue(text));
         }
 
         // 상태별 UI 활성/비활성 처리
         bool showList = (state == DialogueState.Selection);
         bool showConfirm = (state == DialogueState.Confirmation);
         
-        // 터치 가능 여부: 인사(Greeting)와 결과(Result)에서만 화면 터치로 진행
-        bool canTouch = (state == DialogueState.Greeting || state == DialogueState.Result);
-
         if (actionExitButtonContainer != null) 
         {
             actionExitButtonContainer.gameObject.SetActive(showList);
@@ -126,9 +139,10 @@ public class DialogueUI : MonoBehaviour
             acceptRejectButtonContainer.SetActive(showConfirm);
         }
         
+        // 스킵 기능을 위해 화면 터치 버튼은 항상 활성화
         if (screenTouchButton != null) 
         {
-            screenTouchButton.interactable = canTouch;
+            screenTouchButton.interactable = true;
         }
 
         // Selection 단계 진입 시 버튼 생성
@@ -138,8 +152,39 @@ public class DialogueUI : MonoBehaviour
         }
     }
 
+    // 타이핑 코루틴
+    private IEnumerator TypeDialogue(string text)
+    {
+        isTyping = true;
+        dialogueText.text = "";
+
+        foreach (char c in text)
+        {
+            dialogueText.text += c;
+            yield return new WaitForSeconds(typingSpeed);
+        }
+
+        isTyping = false;
+    }
+
     private void OnScreenTouch()
     {
+        // 1. 타이핑 중이면 즉시 완료 (스킵)
+        if (isTyping)
+        {
+            if (typingCoroutine != null)
+            {
+                StopCoroutine(typingCoroutine);
+            }
+            if (dialogueText != null)
+            {
+                dialogueText.text = fullText;
+            }
+            isTyping = false;
+            return;
+        }
+
+        // 2. 타이핑이 끝났으면 다음 단계로 진행
         switch (currentState)
         {
             case DialogueState.Greeting:
@@ -150,12 +195,25 @@ public class DialogueUI : MonoBehaviour
                 // 결과 -> 종료
                 CloseDialogue();
                 break;
+            
+            // Selection, Confirmation 단계에서는 버튼 클릭을 유도해야 하므로 배경 터치 무시
+            case DialogueState.Selection:
+            case DialogueState.Confirmation:
+                break;
         }
     }
 
     // 2단계: 리스트에서 퀘스트 버튼 클릭
     private void OnQuestButtonClicked(int questID, QuestState state)
     {
+        // 타이핑 중이면 버튼 클릭 막기 (선택 사항, 여기서는 허용하되 즉시 완료 처리 후 넘어감)
+        if (isTyping)
+        {
+            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+            dialogueText.text = fullText;
+            isTyping = false;
+        }
+
         selectedQuestID = questID;
 
         if (state == QuestState.NotStarted)
@@ -181,6 +239,11 @@ public class DialogueUI : MonoBehaviour
     // 3단계: 수락 버튼 클릭
     private void OnAcceptClicked()
     {
+        if (isTyping) 
+        {
+            return; // 타이핑 중 클릭 방지
+        }
+
         if (selectedQuestID != -1)
         {
             QuestManager.Instance.AcceptQuest(selectedQuestID);
@@ -260,6 +323,13 @@ public class DialogueUI : MonoBehaviour
     // 대화 UI 닫기
     private void CloseDialogue()
     {
+        // 닫을 때 코루틴 정지
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+        }
+        isTyping = false;
+
         if (dialoguePanel != null)
         {
             dialoguePanel.SetActive(false);
