@@ -819,6 +819,7 @@ MonoBehaviour:
   acceptRejectButtonContainer: {fileID: 8209887643266557273}
   acceptButton: {fileID: 9063609791202946224}
   rejectButton: {fileID: 8647790739048863883}
+  typingSpeed: 0.05
 --- !u!114 &8083242299631551245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -841,10 +842,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 0}
-    m_PressedColor: {r: 1, g: 1, b: 1, a: 0}
-    m_SelectedColor: {r: 1, g: 1, b: 1, a: 0}
-    m_DisabledColor: {r: 1, g: 1, b: 1, a: 0}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:

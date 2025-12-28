@@ -43,6 +43,9 @@ public class DialogueUI : MonoBehaviour
     private bool isTyping = false;
     private string fullText = "";
     private Coroutine typingCoroutine;
+    
+    // 대화 종료 시 호출할 콜백 (카메라 복구 등)
+    private System.Action onCloseCallback;
 
     private void Awake()
     {
@@ -86,9 +89,11 @@ public class DialogueUI : MonoBehaviour
         }
     }
 
-    // 1단계 시작
-    public void ShowDialogue(string npcName, string randomDialogue, List<Quest> activeQuests)
+    // 1단계 시작: 랜덤 대사 출력
+    public void ShowDialogue(string npcName, string randomDialogue, List<Quest> activeQuests, System.Action onClose = null)
     {
+        this.onCloseCallback = onClose;
+
         if (dialoguePanel != null)
         {
             dialoguePanel.SetActive(true);
@@ -335,10 +340,13 @@ public class DialogueUI : MonoBehaviour
             dialoguePanel.SetActive(false);
         }
 
-        // 플레이어 잠금 해제
-        if (GameManager.Instance != null)
+        // 여기서 플레이어 잠금 해제 X
+        // 카메라가 원래대로 돌아온 뒤에 NPCController가 해제하도록 콜백만 호출
+        if (onCloseCallback != null)
         {
-            GameManager.Instance.SetPlayerInputLocked(false);
+            //GameManager.Instance.SetPlayerInputLocked(false);
+            onCloseCallback.Invoke();
+            onCloseCallback = null;
         }
         
         currentState = DialogueState.None;

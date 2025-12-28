@@ -335,6 +335,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // 플레이어 숨기기/보이기 (NPC 대화 시 사용)
+    public void SetPlayerVisible(bool isVisible)
+    {
+        if (currentPlayer != null)
+        {
+            Renderer[] renderers = currentPlayer.GetComponentsInChildren<Renderer>();
+            foreach (var r in renderers)
+            {
+                r.enabled = isVisible;
+            }
+        }
+    }
+
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
