@@ -89,12 +89,35 @@ public class NPCController : MonoBehaviour, IInteractable
             cachedCameraRotation = mainCamera.transform.rotation;
 
             // NPC 크기에 맞는 머리 높이 계산 (스케일이 커져도 자동 대응)
-            Renderer[] renderers = GetComponentsInChildren<Renderer>();
-            Bounds bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++)
+            // 미니맵/풀맵 전용 마커(SpriteRenderer)가 추가되면 bounds가 비정상적으로 커질 수 있으므로 제외.
+            int minimapLayer = LayerMask.NameToLayer("Minimap");
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            Bounds? boundsOpt = null;
+            foreach (Renderer r in renderers)
             {
-                bounds.Encapsulate(renderers[i].bounds);
+                if (r == null)
+                {
+                    continue;
+                }
+
+                if (minimapLayer >= 0 && r.gameObject.layer == minimapLayer)
+                {
+                    continue;
+                }
+
+                if (!boundsOpt.HasValue)
+                {
+                    boundsOpt = r.bounds;
+                }
+                else
+                {
+                    Bounds b = boundsOpt.Value;
+                    b.Encapsulate(r.bounds);
+                    boundsOpt = b;
+                }
             }
+
+            Bounds bounds = boundsOpt.HasValue ? boundsOpt.Value : new Bounds(transform.position, Vector3.one);
 
             float lookY = bounds.min.y + bounds.size.y * lookHeightRatio;
             Vector3 lookTargetPos = new Vector3(transform.position.x, lookY, transform.position.z);
@@ -320,5 +343,44 @@ public class NPCController : MonoBehaviour, IInteractable
             return randomDialogues[randomIndex];
         }
         return "기본값 인사";
+    }
+
+    /// <summary>
+    /// 미니맵에서 "퀘스트가 있는 NPC" 표시를 위해 사용.
+    /// - NotStarted(시작 전) 또는 CanComplete(완료 가능) 상태의 퀘스트가 하나라도 있으면 true
+    /// - InProgress(진행 중)만 있는 경우는 기본 아이콘으로 간주(요구사항 해석에 따라 필요하면 변경 가능)
+    /// </summary>
+    public bool HasAvailableQuestOnMinimap()
+    {
+        if (questList == null || questList.Count == 0)
+        {
+            return false;
+        }
+
+        if (QuestManager.Instance == null)
+        {
+            return false;
+        }
+
+        foreach (QuestData data in questList)
+        {
+            if (data == null)
+            {
+                continue;
+            }
+
+            Quest quest = QuestManager.Instance.GetQuest(data.questID);
+            if (quest == null)
+            {
+                continue;
+            }
+
+            if (quest.state == QuestState.NotStarted || quest.state == QuestState.CanComplete)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

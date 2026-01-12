@@ -1533,6 +1533,7 @@ GameObject:
   - component: {fileID: 5459420380865642131}
   - component: {fileID: 9200446473512782970}
   - component: {fileID: 2853317582603871933}
+  - component: {fileID: 3730581719271320237}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -1678,6 +1679,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 192
   attackRange: 10
+  interactionRange: 2
   attackCooldown: 1
   lastAttackCooldown: 0
   fireballPrefab: {fileID: 378097938803567579, guid: 613d840e98cb6504c870532992b1302a, type: 3}
@@ -1696,6 +1698,7 @@ MonoBehaviour:
   isAutoMode: 0
   agent: {fileID: 2853317582603871933}
   currentRoom: {fileID: 0}
+  isDoorInteracting: 0
 --- !u!195 &2853317582603871933
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1718,6 +1721,35 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &3730581719271320237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4873029127807822883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f87b73e70782eb4b81711babb6c031f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerSprite: {fileID: -2054423280, guid: 221a552e3a2c5bd4eaf20dd22dcfb9cb, type: 3}
+  playerArrowSprite: {fileID: -1425343958, guid: 4d780c2276b47824f941473537004d5b, type: 3}
+  cameraConeSprite: {fileID: 702834948, guid: ceb0ff5bb15adfb4a80f4a92284a4a7c, type: 3}
+  playerColor: {r: 1, g: 1, b: 1, a: 1}
+  playerArrowColor: {r: 1, g: 1, b: 1, a: 1}
+  cameraConeColor: {r: 1, g: 1, b: 1, a: 0.45}
+  playerScale: 0.75
+  playerArrowScale: 1
+  cameraConeScale: 7
+  heightOffset: 90
+  playerYawOffsetDegrees: 0
+  cameraYawOffsetDegrees: 0
+  minimapLayerName: Minimap
+  minimapLayerIndex: 0
+  playerBaseSortingOrder: 1000
+  baseSortingOrder: 1000
+  coneSortingOffset: -1
 --- !u!1 &4910823309559781959
 GameObject:
   m_ObjectHideFlags: 0

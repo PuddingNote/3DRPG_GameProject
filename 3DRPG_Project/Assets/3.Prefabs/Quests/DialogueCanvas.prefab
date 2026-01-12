@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 369356225300243207}
   - component: {fileID: 6832127260263934736}
   - component: {fileID: 888310362342158983}
+  - component: {fileID: 7080496429090601830}
   m_Layer: 5
   m_Name: DialogueCanvas
   m_TagString: Untagged
@@ -60,7 +61,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_TargetDisplay: 0
 --- !u!114 &6832127260263934736
 MonoBehaviour:
@@ -102,6 +103,29 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &7080496429090601830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 154335460665168944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 436c329b5a7b5c746b07c8d192b6b4d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dialoguePanel: {fileID: 154335460665168944}
+  npcNameText: {fileID: 8658153607207360715}
+  dialogueText: {fileID: 7015480732145445646}
+  screenTouchButton: {fileID: 8083242299631551245}
+  actionExitButtonContainer: {fileID: 5407040369783074661}
+  actionButtonPrefab: {fileID: 4908102950571817061, guid: 93757fa1fb9ba5e45b94cc7b5c080a03, type: 3}
+  exitButtonPrefab: {fileID: 9087107290405762009, guid: b3791c1e062e0924492ec0c4b35752d4, type: 3}
+  acceptRejectButtonContainer: {fileID: 8209887643266557273}
+  acceptButton: {fileID: 9063609791202946224}
+  rejectButton: {fileID: 8647790739048863883}
+  typingSpeed: 0.05
 --- !u!1 &168882159386196159
 GameObject:
   m_ObjectHideFlags: 0
@@ -726,10 +750,9 @@ GameObject:
   - component: {fileID: 8631641295067816882}
   - component: {fileID: 1758551820734084784}
   - component: {fileID: 7496388334704212601}
-  - component: {fileID: 4549838830980167931}
   - component: {fileID: 8083242299631551245}
   m_Layer: 5
-  m_Name: DialoguePanel
+  m_Name: Dialogue Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -797,29 +820,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &4549838830980167931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4000705505399251582}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 436c329b5a7b5c746b07c8d192b6b4d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dialoguePanel: {fileID: 4000705505399251582}
-  npcNameText: {fileID: 8658153607207360715}
-  dialogueText: {fileID: 7015480732145445646}
-  screenTouchButton: {fileID: 8083242299631551245}
-  actionExitButtonContainer: {fileID: 5407040369783074661}
-  actionButtonPrefab: {fileID: 4908102950571817061, guid: 93757fa1fb9ba5e45b94cc7b5c080a03, type: 3}
-  exitButtonPrefab: {fileID: 9087107290405762009, guid: b3791c1e062e0924492ec0c4b35752d4, type: 3}
-  acceptRejectButtonContainer: {fileID: 8209887643266557273}
-  acceptButton: {fileID: 9063609791202946224}
-  rejectButton: {fileID: 8647790739048863883}
-  typingSpeed: 0.05
 --- !u!114 &8083242299631551245
 MonoBehaviour:
   m_ObjectHideFlags: 0

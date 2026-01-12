@@ -470,6 +470,12 @@ public class PlayerController : LivingEntity
     // 월드 속성이 다 반영된 이후에, 카메라 방향과 같은 "연출 요소" 작업을 처리할때 유용하다.
     private void LateUpdate()
     {
+        // 입력 잠금 상태면 카메라 줌/회전도 차단(풀맵 등 UI 조작을 위해)
+        if (IsInputLocked)
+        {
+            return;
+        }
+
         CameraRotation();
         CameraZoom();
         
