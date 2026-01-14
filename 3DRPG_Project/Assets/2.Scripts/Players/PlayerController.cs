@@ -113,6 +113,9 @@ public class PlayerController : LivingEntity
 
     // 입력 잠금 상태 (UI 열림 등)
     public bool IsInputLocked { get; private set; } = false;
+    
+    // 수동 입력 잠금 상태 (풀맵 등 UI 조작 중: WASD/타겟팅/공격 입력만 제한하고 자동 모드는 계속 동작)
+    public bool IsManualInputLocked { get; private set; } = false;
 
     protected override void Awake()
     {
@@ -163,28 +166,38 @@ public class PlayerController : LivingEntity
 
     private void Update()
     {
-        // 입력 잠금 상태면 업데이트 중지
-        if (IsInputLocked) 
+        // 전체 입력/행동 잠금(대화/연출 등): 플레이어 로직 자체를 멈춤
+        if (IsInputLocked)
+        {
+            return;
+        }
+        
+        // 수동 입력 잠금(풀맵 등): 자동 모드가 아니면, 수동 상태 업데이트도 멈춰서 캐릭터가 움직이지 않게 함
+        if (IsManualInputLocked && !isAutoMode)
         {
             return;
         }
 
-        // 자동 모드 토글 (T키) (지금이야 T키인데 나중에는 UI 버튼을 눌렀을때로 변경할 예정)
-        if (Input.GetKeyDown(KeyCode.T))
+        // 수동 입력 잠금 상태에서는 수동 조작 입력만 무시하고, 자동 모드 상태 머신은 계속 실행
+        if (!IsManualInputLocked)
         {
-            ToggleAutoMode();
-        }
+            // 자동 모드 토글 (T키) (지금이야 T키인데 나중에는 UI 버튼을 눌렀을때로 변경할 예정)
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                ToggleAutoMode();
+            }
 
-        // 마우스 클릭 처리 (타겟팅만)
-        if (Input.GetMouseButtonDown(0))
-        {
-            HandleTargetingInput();
-        }
+            // 마우스 클릭 처리 (타겟팅만)
+            if (Input.GetMouseButtonDown(0))
+            {
+                HandleTargetingInput();
+            }
 
-        // 스페이스바 입력 (공격 또는 상호작용 시도)
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            TryAction();
+            // 스페이스바 입력 (공격 또는 상호작용 시도)
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                TryAction();
+            }
         }
 
         // 현재 상태의 로직 실행
@@ -399,6 +412,12 @@ public class PlayerController : LivingEntity
 
     public void CharacterMove()
     {
+        if (IsInputLocked || IsManualInputLocked)
+        {
+            UpdateAnimation(false);
+            return;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
@@ -470,8 +489,8 @@ public class PlayerController : LivingEntity
     // 월드 속성이 다 반영된 이후에, 카메라 방향과 같은 "연출 요소" 작업을 처리할때 유용하다.
     private void LateUpdate()
     {
-        // 입력 잠금 상태면 카메라 줌/회전도 차단(풀맵 등 UI 조작을 위해)
-        if (IsInputLocked)
+        // 입력 잠금 상태면 카메라 줌/회전도 차단(풀맵/대화 등 UI 조작을 위해)
+        if (IsInputLocked || IsManualInputLocked)
         {
             return;
         }
@@ -570,6 +589,7 @@ public class PlayerController : LivingEntity
     public void SetInputLock(bool isLocked)
     {
         IsInputLocked = isLocked;
+        IsManualInputLocked = isLocked;
         if (isLocked)
         {
             // 1. 네비게이션 에이전트 정지 (자동 모드일 때 안전하게 정지)
@@ -580,6 +600,26 @@ public class PlayerController : LivingEntity
             }
 
             // 2. 애니메이션 초기화 (Idle 상태로 전환)
+            UpdateAnimation(false);
+        }
+    }
+    
+    // 수동 입력만 잠금/해제 (풀맵 등). 자동 모드(네비/전투)는 계속 진행되어야 하므로 NavMeshAgent는 건드리지 않음.
+    public void SetManualInputLock(bool isLocked)
+    {
+        IsManualInputLocked = isLocked;
+
+        if (isLocked)
+        {
+            // 수동 모드일 때는 지도 UI를 여는 순간 캐릭터가 멈춰있도록 강제로 Idle로 돌려준다.
+            if (!isAutoMode)
+            {
+                target = null;
+                interactionTarget = null;
+                interactionTransform = null;
+                ChangeState(new PlayerIdleState(this));
+            }
+
             UpdateAnimation(false);
         }
     }

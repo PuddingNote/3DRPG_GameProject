@@ -361,6 +361,19 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    
+    // 수동 조작 입력만 잠금 (풀맵 등 UI 조작 시 사용). 자동 전투/이동은 계속 동작해야 하므로 별도로 분리.
+    public void SetPlayerManualInputLocked(bool isLocked)
+    {
+        if (currentPlayer != null)
+        {
+            PlayerController pc = currentPlayer.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.SetManualInputLock(isLocked);
+            }
+        }
+    }
 
     // 플레이어 숨기기/보이기 (NPC 대화 시 사용)
     public void SetPlayerVisible(bool isVisible)

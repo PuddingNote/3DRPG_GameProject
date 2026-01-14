@@ -62,6 +62,11 @@ public class PlayerAutoState : PlayerState
     // 수동 조작 개입 확인
     private bool CheckManualInput()
     {
+        if (player.IsManualInputLocked)
+        {
+            return false;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         if (Mathf.Abs(horizontal) > 0.1f || Mathf.Abs(vertical) > 0.1f)

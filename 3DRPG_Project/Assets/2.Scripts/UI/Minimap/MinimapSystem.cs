@@ -155,7 +155,7 @@ public class MinimapSystem : MonoBehaviour
     [SerializeField] private bool createCamerasAtRuntimeIfMissing = true;
     [Tooltip("RenderTexture를 런타임에 자동 생성할지 여부(Inspector에서 직접 할당하는 방식이면 끔)")]
     [SerializeField] private bool createRenderTexturesAtRuntime = true;
-    [Tooltip("풀맵이 열려있는 동안 플레이어 입력을 잠글지 여부(GameManager.SetPlayerInputLocked 사용)")]
+    [Tooltip("풀맵이 열려있는 동안 플레이어 '수동 조작 입력'을 잠글지 여부(GameManager.SetPlayerManualInputLocked 사용). 자동 전투/이동은 계속 진행.")]
     [SerializeField] private bool lockPlayerInputWhileFullMapOpen = true;
 
 
@@ -278,7 +278,7 @@ public class MinimapSystem : MonoBehaviour
 
         if (lockPlayerInputWhileFullMapOpen && GameManager.Instance != null)
         {
-            GameManager.Instance.SetPlayerInputLocked(visible);
+            GameManager.Instance.SetPlayerManualInputLocked(visible);
         }
     }
 
