@@ -187,15 +187,22 @@ public class MinimapSystem : MonoBehaviour
 
     private void Awake()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-
         // 초기 씬에서는 sceneLoaded 이벤트를 이미 놓쳤을 수 있으므로, "게임 내 모든 초기화가 끝난 뒤" 적용을 보장하기 위해 Start에서 지연 초기화.
         SetFullMapVisible(false);
     }
 
-    private void Start()
+    private void OnEnable()
     {
+        // 비활성 오브젝트에서도 sceneLoaded 콜백은 호출될 수 있으므로 활성/비활성에 맞춰 관리하여 LoadingScene에서의 코루틴 에러를 방지.
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
         BeginDeferredInitialize();
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private void OnDestroy()
@@ -206,6 +213,18 @@ public class MinimapSystem : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // LoadingScene에서는 맵 시스템을 사용하지 않으므로 초기화 자체를 생략
+        if (scene.name == "LoadingScene")
+        {
+            return;
+        }
+
+        // 비활성 상태에서는 코루틴을 시작할 수 없으므로 방어
+        if (!isActiveAndEnabled)
+        {
+            return;
+        }
+
         // 씬 이동 시 플레이어/카메라/UI가 재구성될 수 있으므로 "지연 재초기화"
         BeginDeferredInitialize();
     }
