@@ -97,6 +97,9 @@ public class MinimapSystem : MonoBehaviour
     [Tooltip("autoComputeFullMapBounds=false일 때 사용하는 수동 bounds(월드 좌표 기준)")]
     [SerializeField] private Bounds manualFullMapWorldBounds = new Bounds(Vector3.zero, new Vector3(100f, 10f, 100f));
 
+    [Tooltip("풀맵 드래그 경계(bounds)에 여유 공간을 추가. (x=minX, y=maxX, z=minZ, w=maxZ) 단위: 월드 유닛")]
+    [SerializeField] private Vector4 fullMapBoundsPaddingWorld = Vector4.zero;
+
 
 
     [Header("Full Map Default Fit")]
@@ -642,6 +645,7 @@ public class MinimapSystem : MonoBehaviour
         if (!autoComputeFullMapBounds)
         {
             fullMapWorldBounds = manualFullMapWorldBounds;
+            ApplyFullMapBoundsPadding();
             ApplyFullMapDefaultFitIfNeeded();
             return;
         }
@@ -665,7 +669,33 @@ public class MinimapSystem : MonoBehaviour
             fullMapWorldBounds = new Bounds(center, new Vector3(200f, 10f, 200f));
         }
 
+        ApplyFullMapBoundsPadding();
         ApplyFullMapDefaultFitIfNeeded();
+    }
+
+    // 풀맵 bounds에 여유 공간(패딩) 적용
+    private void ApplyFullMapBoundsPadding()
+    {
+        if (fullMapBoundsPaddingWorld == Vector4.zero)
+        {
+            return;
+        }
+
+        Bounds b = fullMapWorldBounds;
+        Vector3 min = b.min;
+        Vector3 max = b.max;
+
+        min.x -= Mathf.Max(0f, fullMapBoundsPaddingWorld.x);
+        max.x += Mathf.Max(0f, fullMapBoundsPaddingWorld.y);
+        min.z -= Mathf.Max(0f, fullMapBoundsPaddingWorld.z);
+        max.z += Mathf.Max(0f, fullMapBoundsPaddingWorld.w);
+
+        Vector3 center = (min + max) * 0.5f;
+        Vector3 size = (max - min);
+        
+        size.y = b.size.y;  // y 크기는 드래그 경계에 영향이 없으므로 기존 값 유지
+
+        fullMapWorldBounds = new Bounds(center, size);
     }
 
     // 풀맵 기본 피트 적용

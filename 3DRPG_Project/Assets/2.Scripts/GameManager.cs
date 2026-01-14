@@ -18,10 +18,13 @@ public class GameManager : MonoBehaviour
     public GameObject mainCameraPrefab;     // 메인 카메라 원본
     public GameObject virtualCameraPrefab;  // 팔로우 카메라 원본
     public GameObject dungeonResultUIPrefab; // 던전 결과 UI 프리팹
+    [Tooltip("미니맵/풀맵 UI 프리팹(Map Canvas). LoadingScene을 제외한 모든 씬에서 유지됩니다.")]
+    public GameObject mapCanvasPrefab;      // Map Canvas(미니맵/풀맵) 프리팹
 
     [Header("Current Instances")]
     public GameObject currentPlayer;        // 현재 플레이어 오브젝트
     public CinemachineVirtualCamera currentVirtualCamera;    // 현재 팔로우 카메라
+    public GameObject currentMapCanvas;     // 현재 Map Canvas(미니맵/풀맵 UI)
 
     [Header("Data")]
     public Vector3 lastTownPosition;        // 마을에서의 마지막 위치
@@ -117,6 +120,9 @@ public class GameManager : MonoBehaviour
         // 5. 카메라 타겟 재연결
         SetupCameraTargets();
 
+        // 5-1. 미니맵/풀맵 UI(Map Canvas) 유지/생성
+        EnsureMapCanvas(scene);
+
         // 6. 카메라 시점 리셋 (플레이어 뒤쪽 보기)
         if (currentPlayer != null)
         {
@@ -143,6 +149,27 @@ public class GameManager : MonoBehaviour
                 transitionPanel.gameObject.SetActive(true);
                 transitionPanel.anchoredPosition = Vector2.zero;
             }
+        }
+    }
+
+    // 미니맵/풀맵 UI를 LoadingScene을 제외한 모든 씬에서 유지
+    private void EnsureMapCanvas(Scene scene)
+    {
+        // 로딩 씬에서는 미니맵을 숨김 처리
+        bool shouldShow = scene.name != "LoadingScene";
+
+        if (currentMapCanvas == null)
+        {
+            if (mapCanvasPrefab != null && shouldShow)
+            {
+                currentMapCanvas = Instantiate(mapCanvasPrefab);
+                DontDestroyOnLoad(currentMapCanvas);
+            }
+        }
+
+        if (currentMapCanvas != null)
+        {
+            currentMapCanvas.SetActive(shouldShow);
         }
     }
 

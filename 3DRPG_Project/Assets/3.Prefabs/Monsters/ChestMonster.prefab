@@ -760,6 +760,7 @@ GameObject:
   - component: {fileID: 3825611125160982093}
   - component: {fileID: 7284736333241243}
   - component: {fileID: 6241024365019788503}
+  - component: {fileID: 1644135061000757015}
   m_Layer: 7
   m_Name: ChestMonster
   m_TagString: Untagged
@@ -872,6 +873,30 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &1644135061000757015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200122057412035158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdba3a4d71c6ca847b970a6424e70382, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconKind: 2
+  iconSprite: {fileID: 21300000, guid: 304834ea17c3608498db3d651e03e646, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
+  iconScale: 2
+  heightOffset: 6
+  minimapLayerName: Minimap
+  minimapLayerIndex: 0
+  faceMinimapCameras: 1
+  followOwnerRotation: 0
+  tintRedWhenNpcHasQuest: 1
+  npcQuestColor: {r: 1, g: 0, b: 0, a: 1}
+  npcQuestPollInterval: 0.5
 --- !u!1 &8118799311508798906
 GameObject:
   m_ObjectHideFlags: 0
