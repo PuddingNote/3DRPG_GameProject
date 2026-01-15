@@ -290,6 +290,7 @@ GameObject:
   - component: {fileID: 6361829294558172862}
   - component: {fileID: 5552199139978204691}
   - component: {fileID: 5012471493485703073}
+  - component: {fileID: 2654631436831493731}
   m_Layer: 5
   m_Name: DungeonResultCanvas
   m_TagString: Untagged
@@ -394,3 +395,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   touchText: {fileID: 9132509308706240583}
   screenButton: {fileID: 429852614133487780}
+--- !u!114 &2654631436831493731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8504389182623752964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aef3a0e811cab4346be7f43745495dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reason: 

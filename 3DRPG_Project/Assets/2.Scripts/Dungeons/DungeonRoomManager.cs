@@ -125,6 +125,12 @@ public class DungeonRoomManager : MonoBehaviour
     // 마지막 방 클리어 시 호출 (연출)
     private IEnumerator BossClearSequence()
     {
+        // 연출 중에는 미니맵 캔버스를 숨김 처리(보스 슬로우모션/클로즈업 동안)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PushMinimapHidden(this);
+        }
+
         // 0. 연출 시작 즉시 플레이어 조작 차단
         if (GameManager.Instance.currentPlayer != null)
         {
@@ -257,6 +263,12 @@ public class DungeonRoomManager : MonoBehaviour
             //   // GameManager가 없으면 바로 이동 (비상용)
             //   LoadingSceneController.LoadScene(nextSceneName);
             //
+        }
+
+        // 결과 UI가 자체적으로 미니맵을 숨기므로, 연출용 숨김 요청은 해제
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PopMinimapHidden(this);
         }
     }
 

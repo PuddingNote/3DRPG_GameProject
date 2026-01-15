@@ -436,6 +436,7 @@ MonoBehaviour:
   currentPlayer: {fileID: 0}
   currentVirtualCamera: {fileID: 0}
   currentMapCanvas: {fileID: 0}
+  autoHideMinimapWhileOtherUIOpen: 1
   lastTownPosition: {x: 0, y: 0, z: 0}
   hasSavedPosition: 0
   previousSceneName: 
@@ -12007,6 +12008,7 @@ GameObject:
   - component: {fileID: 1221411962}
   - component: {fileID: 1221411961}
   - component: {fileID: 1221411965}
+  - component: {fileID: 1221411966}
   m_Layer: 5
   m_Name: DungeonEntranceUI Canvas
   m_TagString: Untagged
@@ -12114,6 +12116,19 @@ MonoBehaviour:
   closeButton: {fileID: 399116682}
   stageButtonContainer: {fileID: 1634959364}
   stageButtonPrefab: {fileID: 6674173229356530244, guid: a3ea8f801d2ff23489254e9bf6ff8002, type: 3}
+--- !u!114 &1221411966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1221411960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aef3a0e811cab4346be7f43745495dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reason: 
 --- !u!1 &1265031435
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Cinemachine;
@@ -18,13 +19,20 @@ public class GameManager : MonoBehaviour
     public GameObject mainCameraPrefab;     // 메인 카메라 원본
     public GameObject virtualCameraPrefab;  // 팔로우 카메라 원본
     public GameObject dungeonResultUIPrefab; // 던전 결과 UI 프리팹
-    [Tooltip("미니맵/풀맵 UI 프리팹(Map Canvas). LoadingScene을 제외한 모든 씬에서 유지됩니다.")]
+    [Tooltip("미니맵/풀맵 UI 프리팹(Map Canvas). LoadingScene을 제외한 모든 씬에서 유지.")]
     public GameObject mapCanvasPrefab;      // Map Canvas(미니맵/풀맵) 프리팹
 
     [Header("Current Instances")]
     public GameObject currentPlayer;        // 현재 플레이어 오브젝트
     public CinemachineVirtualCamera currentVirtualCamera;    // 현재 팔로우 카메라
     public GameObject currentMapCanvas;     // 현재 Map Canvas(미니맵/풀맵 UI)
+
+    [Header("Minimap Visibility")]
+    [Tooltip("다른 UI(대화/던전입장/결과창/연출 등)가 활성화되어 있을 때, 미니맵(Map Canvas)을 숨김 처리.")]
+    [SerializeField] private bool autoHideMinimapWhileOtherUIOpen = true;
+
+    // 미니맵 숨김 요청자 집합(중복 방지). Unity InstanceID 기반으로 관리.
+    private readonly HashSet<int> minimapHideRequests = new HashSet<int>();
 
     [Header("Data")]
     public Vector3 lastTownPosition;        // 마을에서의 마지막 위치
@@ -157,6 +165,10 @@ public class GameManager : MonoBehaviour
     {
         // 로딩 씬에서는 미니맵을 숨김 처리
         bool shouldShow = scene.name != "LoadingScene";
+        if (autoHideMinimapWhileOtherUIOpen && minimapHideRequests.Count > 0)
+        {
+            shouldShow = false;
+        }
 
         if (currentMapCanvas == null)
         {
@@ -169,7 +181,58 @@ public class GameManager : MonoBehaviour
 
         if (currentMapCanvas != null)
         {
+            // 숨길 때 풀맵이 열려있으면 먼저 닫아 입력락/상태가 남는 것을 방지
+            if (!shouldShow && currentMapCanvas.activeSelf)
+            {
+                TryCloseFullMapIfOpen();
+            }
             currentMapCanvas.SetActive(shouldShow);
+        }
+    }
+
+    // 다른 UI/연출이 미니맵을 숨기고 싶을 때 호출
+    public void PushMinimapHidden(Object owner)
+    {
+        if (owner == null)
+        {
+            return;
+        }
+
+        int id = owner.GetInstanceID();
+        minimapHideRequests.Add(id);
+        EnsureMapCanvas(SceneManager.GetActiveScene());
+    }
+
+    // PushMinimapHidden과 쌍으로 해제
+    public void PopMinimapHidden(Object owner)
+    {
+        if (owner == null)
+        {
+            return;
+        }
+
+        int id = owner.GetInstanceID();
+        minimapHideRequests.Remove(id);
+        EnsureMapCanvas(SceneManager.GetActiveScene());
+    }
+
+    // 풀맵이 열려있으면 먼저 닫아 입력락/상태가 남는 것을 방지
+    private void TryCloseFullMapIfOpen()
+    {
+        if (currentMapCanvas == null)
+        {
+            return;
+        }
+
+        MinimapSystem minimapSystem = currentMapCanvas.GetComponentInChildren<MinimapSystem>(true);
+        if (minimapSystem == null)
+        {
+            return;
+        }
+
+        if (minimapSystem.IsFullMapOpen())
+        {
+            minimapSystem.SetFullMapVisible(false);
         }
     }
 

@@ -46,6 +46,7 @@ public class NPCController : MonoBehaviour, IInteractable
     private Vector3 cachedCameraPosition;       // 메인 카메라의 원래 위치
     private Quaternion cachedCameraRotation;    // 메인 카메라의 원래 회전
     private Coroutine hidePlayerCoroutine;      // 플레이어 숨기기 코루틴
+    private bool minimapHiddenRequested;        // 상호작용 시작 시 미니맵 숨김 요청 여부
     
     public void Interact()
     {
@@ -60,6 +61,14 @@ public class NPCController : MonoBehaviour, IInteractable
     private IEnumerator InteractionRoutine()
     {
         isInteracting = true;
+
+        // 0. 상호작용 시작 즉시 미니맵 숨김(카메라 무빙 전에 숨겨야 함)
+        minimapHiddenRequested = false;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PushMinimapHidden(this);
+            minimapHiddenRequested = true;
+        }
 
         // 1. 입력 잠금
         if (GameManager.Instance != null)
@@ -181,10 +190,39 @@ public class NPCController : MonoBehaviour, IInteractable
             
             // 3. 입력 잠금 해제
             GameManager.Instance.SetPlayerInputLocked(false);
+
+            // 4. 미니맵 숨김 해제(대화 UI가 이미 닫힌 이후에 호출되므로 안전)
+            if (minimapHiddenRequested)
+            {
+                GameManager.Instance.PopMinimapHidden(this);
+                minimapHiddenRequested = false;
+            }
         }
 
         isInteracting = false;
         yield return null;
+    }
+
+    private void OnDisable()
+    {
+        // 상호작용 중 비활성화되는 예외 케이스(씬 전환/오브젝트 비활성화) 방어
+        if (GameManager.Instance != null && minimapHiddenRequested)
+        {
+            GameManager.Instance.PopMinimapHidden(this);
+            minimapHiddenRequested = false;
+        }
+
+        isInteracting = false;
+    }
+
+    private void OnDestroy()
+    {
+        // Disable이 호출되지 않는 파괴 경로도 방어적으로 처리
+        if (GameManager.Instance != null && minimapHiddenRequested)
+        {
+            GameManager.Instance.PopMinimapHidden(this);
+            minimapHiddenRequested = false;
+        }
     }
 
     // 플레이어 숨기기 코루틴
