@@ -761,6 +761,7 @@ GameObject:
   - component: {fileID: 7284736333241243}
   - component: {fileID: 6241024365019788503}
   - component: {fileID: 1644135061000757015}
+  - component: {fileID: -5566451969547354558}
   m_Layer: 7
   m_Name: ChestMonster
   m_TagString: Untagged
@@ -897,6 +898,22 @@ MonoBehaviour:
   tintRedWhenNpcHasQuest: 1
   npcQuestColor: {r: 1, g: 0, b: 0, a: 1}
   npcQuestPollInterval: 0.5
+--- !u!114 &-5566451969547354558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200122057412035158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c928ec4c206bec642a5f18c2f2e17cf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropTable: {fileID: 11400000, guid: 6b9c09f29ecfd6f45892ae2e9d3cafa8, type: 2}
+  vfxLibrary: {fileID: 11400000, guid: 1ec194f8596ce1b4f94b328b40530113, type: 2}
+  maxVfxSpawnCount: 5
+  spawnOrigin: {fileID: 0}
 --- !u!1 &8118799311508798906
 GameObject:
   m_ObjectHideFlags: 0
