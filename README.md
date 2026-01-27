@@ -1,4 +1,4 @@
-# 3DRPG_GameProject (마비노기 모바일 모티브 제작)
+# 3DRPG_GameProject (마비노기 모바일 모티브 기능 제작 1)
 
 스크립트 내용 한줄 정리 (3DRPG_Project/Assets/2.Scripts/.)
 
