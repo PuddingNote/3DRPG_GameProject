@@ -1,6 +1,8 @@
-# 3DRPG_GameProject (마비노기 모바일 모티브 기능 제작 1)
+# 3DRPG_GameProject
 
-스크립트 내용 한줄 정리 (3DRPG_Project/Assets/2.Scripts/.)
+마비노기 모바일 모티브 기능 제작 1 - 던전시스템 적용 버전
+
+새로 추가된 스크립트 내용 한줄 정리 (3DRPG_Project/Assets/2.Scripts/.)
 
 </br>
 
